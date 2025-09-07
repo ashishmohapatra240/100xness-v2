@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:ws": "tsc -b && node ./dist/price-poller/index.js",
+    "dev:engine": "tsc -b && node ./dist/engine/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/redis": "workspace:*"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/ws": "^8.18.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.18.3"
+  }
+}
