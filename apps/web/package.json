@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "next dev --turbopack --port 3200",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
@@ -12,6 +12,15 @@
   },
   "dependencies": {
     "@repo/ui": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.12",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.5",
+    "@tanstack/react-query": "^5.85.6",
+    "@tanstack/react-query-devtools": "^5.85.6",
+    "axios": "^1.11.0",
+    "lightweight-charts": "^5.0.8",
+    "react-hot-toast": "^2.6.0",
+    "autoprefixer": "^10.4.20",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
