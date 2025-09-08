@@ -1,135 +1,189 @@
-# Turborepo starter
+# 100xness
 
-This Turborepo starter is maintained by the Turborepo core team.
+A real-time options trading platform like [Exness](https://www.exness.com/) built with Node.js, Express, PostgreSQL, and Next.js frontend.
 
-## Using this example
+## Monorepo Structure
 
-Run the following command:
+This project uses [Turborepo](https://turbo.build/) for monorepo management and includes:
 
-```sh
-npx create-turbo@latest
-```
+- **Backend** (`apps/backend/`) - Node.js/Express API server with trading engine
+- **Web** (`apps/web/`) - Next.js frontend application
+- **Shared Packages** (`packages/`) - Shared utilities, UI components, and configurations
 
-## What's inside?
+## Overview
 
-This Turborepo includes the following packages/apps:
+### 1. **Web Server** (`src/server/`)
 
-### Apps and Packages
+- Used for user registration and login with JWT, Order creation and management and Balance checking
+- Built with express and typescript
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### 2. **Trading Engine** (`src/engine/`)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- Processes trading orders and manages real-time trading logic, Monitors open positions for take-profit and stop-loss, Handles automatic order closures, Manages user balances in real-time, Saves order data to the database
+- Built with Node with Redis streams
 
-### Utilities
+### 3. **Price Poller** (`src/price-poller/`)
 
-This Turborepo has some additional tools already setup for you:
+- Fetches real-time BTC_USDC prices by a WebSocket connection to Backpack Exchange and sends price data to the trading engine
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Architecture
 
-### Build
+## Database Structure
 
-To build all apps and packages, run the following command:
+The system uses PostgreSQL with Prisma ORM.
+
+### Users
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+id
+email
+password
+name
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### Assets
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+symbol
+balance
+decimals
+userId
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
+### Orders
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+id
+userId
+side
+qty
+openingPrice
+closingPrice
+status
+leverage
+takeProfit
+stopLoss
+pnl
+closeReason
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Setup Project
 
+### Prerequisites
+
+- Node.js
+- Docker
+- PostgreSQL database (using docker)
+- Redis server (using docker)
+- pnpm package manager
+
+### Installation
+
+1. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+2. **Set up environment variables:**
+   Create a `.env` file in the backend directory:
+
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/trading_db"
+   REDIS_URL="redis://localhost:6379"
+   PORT=3001
+   ```
+
+3. **Start Docker:**
+
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Set up the database:**
+   ```bash
+   npx prisma migrate dev
+   npx prisma generate
+   ```
+
+### Running the Application
+
+#### Using Turbo (Recommended)
+
+**Start all services:**
+
+```bash
+pnpm run dev
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+**Start specific services:**
+
+```bash
+pnpm run build
+pnpm run lint
+pnpm run check-types
 ```
 
-### Remote Caching
+#### Manual Service Management
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+The backend has three separate services that need to be running:
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+1. **Start the Web Server:**
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+   ```bash
+   pnpm run dev:server
+   ```
 
-```
-cd my-turborepo
+2. **Start the Trading Engine:**
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+   ```bash
+   pnpm run dev:engine
+   ```
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+3. **Start the Price Poller:**
+   ```bash
+   pnpm run dev:price-poller
+   ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+**Note**: All three services must be running for the platform to work properly.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## API Endpoints
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+### Authentication
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
 
-## Useful Links
+### Trading
 
-Learn more about the power of Turborepo:
+- `POST /trade/create`
+- `POST /trade/close/:orderId`
+- `GET /trade/orders`
+- `GET /trade/orders/:orderId`
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+### Balance
+
+- `GET /balance`
+
+### Candles (Price Data)
+
+- `GET /candles`
+
+### Redis Streams
+
+- `engine-stream`: Orders and price updates flow through this
+- `callback-queue`: Responses and confirmations flow through this
+
+## Turbo Development
+
+This project uses Turborepo for efficient monorepo development:
+
+### Turbo Commands
+
+- `pnpm run dev` - Start all applications in development mode
+- `pnpm run build` - Build all packages and applications
+- `pnpm run lint` - Lint all packages
+- `pnpm run check-types` - Type check all packages
+- `pnpm run format` - Format code with Prettier
