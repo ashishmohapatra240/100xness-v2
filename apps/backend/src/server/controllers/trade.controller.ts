@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../config";
 import { redis } from "@repo/redis";
+import { randomUUID } from "crypto";
 
 async function getBalance(id: string) {
   const userAssets = await prisma.user.findUnique({
@@ -29,33 +30,44 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 
     const {
+      asset,
       side,
-      status = open,
+      status = "open",
       qty,
       leverage,
       takeProfit,
       stopLoss,
     } = req.body;
 
-    const id = Math.random().toString();
-    const userBalance = getBalance(userId);
+    const id = randomUUID();
+    const userBalance = await getBalance(userId);
 
-
-    const data = {
+    const payload = {
+      kind: "create-order",
+      asset,
+      id,
+      userId,
       side,
       status,
-      qty,
-      leverage,
-      takeProfit,
-      stopLoss,
-      id,
-      userBalance
+      qty: Number(qty),
+      leverage: Number(leverage),
+      takeProfit: takeProfit != null ? Number(takeProfit) : null,
+      stopLoss: stopLoss != null ? Number(stopLoss) : null,
+      balanceSnapshot: userBalance,
+      enqueuedAt: Date.now(),
     };
 
+    const streamId = await redis.xadd(
+      "engine-stream",
+      "*",
+      "data",
+      JSON.stringify({
+        kind: "create-order",
+        payload,
+      })
+    );
 
-    const order = await redis.xadd("order", "*", "data", JSON.stringify(data));
-
-    res.json(`${order} added to stream successfully`);
+    return res.json({ message: "Enqueued", streamId, orderId: id });
   } catch (e) {
     console.log(e);
   }
@@ -81,7 +93,7 @@ export const closeOrder = async (req: Request, res: Response) => {
         closeReason,
       },
     });
-    res.json(`${order} added to stream successfully`);
+    res.json(`${order} closed successfully`);
   } catch (e) {
     console.log(e);
   }
