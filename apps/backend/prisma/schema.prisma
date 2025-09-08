@@ -25,9 +25,8 @@ model User {
 }
 
 enum Symbol {
-  USD
+  USDC
   BTC
-  ETH
 }
 
 model Asset {
@@ -35,7 +34,7 @@ model Asset {
   symbol   Symbol
   balance  Int
   decimals Int
-  userId   String
+  userId   String @db.Uuid
   user     User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, symbol], name: "user_symbol_unique")
