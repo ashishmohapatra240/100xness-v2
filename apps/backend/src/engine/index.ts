@@ -132,102 +132,117 @@ async function engine() {
         let msg: any;
         try {
           msg = JSON.parse(raw);
+          console.log(`[ENGINE] Received message from stream:`, msg);
         } catch {
+          console.log(`[ENGINE] Failed to parse message:`, raw);
           continue;
         }
 
-        const { kind, payload } = msg;
+        const { kind, payload } = msg.request || msg;
 
         switch (kind) {
           case "price-update": {
-            const { symbol, price } = payload ?? {};
-            if (symbol && price != null) {
-              const currentPrice = Number(price);
-              prices[symbol] = Number(price);
-              console.log(`Price updated: ${symbol} = ${prices[symbol]}`);
+            const data = payload?.data || payload;
+            if (data && data.s) {
+              const symbol = data.s.replace("_USDC", "");
+              const bidPrice = data.b ? parseFloat(data.b) : null;
+              const askPrice = data.a ? parseFloat(data.a) : null;
 
-              //liquidation
-              for (let i = open_orders.length - 1; i >= 0; i--) {
-                const order = open_orders[i];
-                if (order?.asset !== symbol) continue;
-
-                const pnl =
-                  order!.side === "buy"
-                    ? (currentPrice - order!.openingPrice) * order!.qty
-                    : (order!.openingPrice - currentPrice) * order!.qty;
-
-                let reason: "TakeProfit" | "StopLoss" | "Liquidation" | undefined;
-
-                //takeprofit
-                if (!reason && order?.takeProfit != null) {
-                  if (
-                    order.side === "buy"
-                      ? currentPrice >= order.takeProfit
-                      : currentPrice <= order.takeProfit
-                  )
-                    reason = "TakeProfit";
-                }
-
-                //stoploss
-                if (!reason && order?.stopLoss != null) {
-                  if (
-                    order?.side === "buy"
-                      ? currentPrice <= order?.stopLoss
-                      : currentPrice >= order?.stopLoss
-                  ) {
-                    reason = "StopLoss";
-                  }
-                }
-
-                // margin
-                if (!reason && order?.leverage && order?.leverage > 1) {
-                  const margin =
-                    (order?.openingPrice * order?.qty) / order?.leverage;
-                  if (-pnl >= margin) {
-                    reason = "Liquidation";
-                  }
-                }
-
-                if (reason) {
-                  if (!balances[order!.userId]) balances[order!.userId] = {};
-                  balances[order!.userId]!.USDC =
-                    (balances[order!.userId]!.USDC || 0) + pnl;
-                }
-
-                try {
-                  await prisma.order.update({
-                    where: { id: order!.id },
-                    data: {
-                      status: "closed",
-                      pnl: Math.round(pnl * 10000),
-                      closingPrice: Math.round(currentPrice * 10000),
-                      closedAt: new Date(),
-                      closeReason: reason as any,
-                    },
-                  });
-                } catch (e) {
-                  console.log("error on closing", e);
-                }
-
-                open_orders.splice(i, 1);
-
-                await client.xadd(
-                  "callback-queue",
-                  "*",
-                  "id",
-                  order!.id,
-                  "status",
-                  "closed",
-                  "reason",
-                  reason as any,
-                  "pnl",
-                  pnl.toString()
+              if (bidPrice && askPrice) {
+                const currentPrice = (bidPrice + askPrice) / 2;
+                prices[symbol] = currentPrice;
+                console.log(
+                  `Price updated: ${symbol} = ${prices[symbol]} (bid: ${bidPrice}, ask: ${askPrice})`
                 );
+
+                //liquidation
+                for (let i = open_orders.length - 1; i >= 0; i--) {
+                  const order = open_orders[i];
+                  if (order?.asset !== symbol) continue;
+
+                  const pnl =
+                    order!.side === "buy"
+                      ? (currentPrice - order!.openingPrice) * order!.qty
+                      : (order!.openingPrice - currentPrice) * order!.qty;
+
+                  let reason:
+                    | "TakeProfit"
+                    | "StopLoss"
+                    | "Liquidation"
+                    | undefined;
+
+                  //takeprofit
+                  if (!reason && order?.takeProfit != null) {
+                    if (
+                      order.side === "buy"
+                        ? currentPrice >= order.takeProfit
+                        : currentPrice <= order.takeProfit
+                    )
+                      reason = "TakeProfit";
+                  }
+
+                  //stoploss
+                  if (!reason && order?.stopLoss != null) {
+                    if (
+                      order?.side === "buy"
+                        ? currentPrice <= order?.stopLoss
+                        : currentPrice >= order?.stopLoss
+                    ) {
+                      reason = "StopLoss";
+                    }
+                  }
+
+                  // margin
+                  if (!reason && order?.leverage && order?.leverage > 1) {
+                    const margin =
+                      (order?.openingPrice * order?.qty) / order?.leverage;
+                    if (-pnl >= margin) {
+                      reason = "Liquidation";
+                    }
+                  }
+
+                  if (reason) {
+                    if (!balances[order!.userId]) balances[order!.userId] = {};
+                    balances[order!.userId]!.USDC =
+                      (balances[order!.userId]!.USDC || 0) + pnl;
+                  }
+
+                  try {
+                    await prisma.order.update({
+                      where: { id: order!.id },
+                      data: {
+                        status: "closed",
+                        pnl: Math.round(pnl * 10000),
+                        closingPrice: Math.round(currentPrice * 10000),
+                        closedAt: new Date(),
+                        closeReason: reason as any,
+                      },
+                    });
+                  } catch (e) {
+                    console.log("error on closing", e);
+                  }
+
+                  open_orders.splice(i, 1);
+
+                  await client.xadd(
+                    "callback-queue",
+                    "*",
+                    "id",
+                    order!.id,
+                    "status",
+                    "closed",
+                    "reason",
+                    reason as any,
+                    "pnl",
+                    pnl.toString()
+                  );
+                }
               }
             }
             break;
           }
           case "create-order": {
+            console.log(`[ENGINE] Processing create-order request:`, payload);
             const {
               id: orderId,
               userId,
@@ -246,6 +261,9 @@ async function engine() {
                 qty,
                 side,
               });
+              console.log(
+                `[ENGINE] Sending invalid_order callback for order ${orderId || "unknown"}`
+              );
               client.xadd(
                 "callback-queue",
                 "*",
@@ -264,6 +282,9 @@ async function engine() {
                 orderId,
                 asset,
               });
+              console.log(
+                `[ENGINE] Sending no_price callback for order ${orderId}`
+              );
               client.xadd(
                 "callback-queue",
                 "*",
@@ -302,6 +323,9 @@ async function engine() {
                 order
               );
 
+              console.log(
+                `[ENGINE] Sending success callback for order ${orderId}`
+              );
               client.xadd(
                 "callback-queue",
                 "*",
@@ -317,6 +341,9 @@ async function engine() {
                 requiredAmount,
                 usdcBalance,
               });
+              console.log(
+                `[ENGINE] Sending insufficient_balance callback for order ${orderId}`
+              );
               client.xadd(
                 "callback-queue",
                 "*",
