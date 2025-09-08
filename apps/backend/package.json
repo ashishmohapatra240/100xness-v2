@@ -4,15 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev:ws": "tsc -b && node ./dist/price-poller/index.js",
-    "dev:engine": "tsc -b && node ./dist/engine/index.js"
+    "dev:price-poller": "tsc -b && node ./dist/price-poller/index.js",
+    "dev:engine": "tsc -b && node ./dist/engine/index.js",
+    "dev:server": "tsc -b && node ./dist/server/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@repo/redis": "workspace:*",
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
