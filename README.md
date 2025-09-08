@@ -27,6 +27,8 @@ This project uses [Turborepo](https://turbo.build/) for monorepo management and 
 - Fetches real-time BTC_USDC prices by a WebSocket connection to Backpack Exchange and sends price data to the trading engine
 
 ## Architecture
+<img width="1345" height="742" alt="image" src="https://github.com/user-attachments/assets/36d47a4d-3350-489f-9628-7a1f5a1b5878" />
+
 
 ## Database Structure
 
