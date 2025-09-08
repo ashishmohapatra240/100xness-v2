@@ -38,19 +38,26 @@ export class RedisSubscriber {
       }
 
       const callbackId = data.id;
+      console.log(`[SUBSCRIBER] Received callback message:`, data);
+      
       if (callbackId && this.callbacks[callbackId]) {
+        console.log(`[SUBSCRIBER] Found matching callback for ID: ${callbackId}, resolving promise`);
         this.callbacks[callbackId]();
         delete this.callbacks[callbackId];
+      } else {
+        console.log(`[SUBSCRIBER] No matching callback found for ID: ${callbackId}`);
       }
     }
   }
 
   waitForMessage(callbackId: string) {
     return new Promise<void>((resolve, reject) => {
+      console.log(`[SUBSCRIBER] Waiting for callback message with ID: ${callbackId}`);
       this.callbacks[callbackId] = resolve as () => {};
 
       setTimeout(() => {
         if (this.callbacks[callbackId]) {
+          console.log(`[SUBSCRIBER] Timeout waiting for message with ID: ${callbackId}`);
           delete this.callbacks[callbackId];
           reject(new Error("Timeout waiting for message"));
         }
