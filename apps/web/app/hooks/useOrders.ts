@@ -50,6 +50,7 @@ export const useCloseOrder = () => {
             orderService.closeOrder(id, pnl, closeReason),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.refetchQueries({ queryKey: ['orders'] });
             toast.success('Order closed successfully');
         },
         onError: (error: any) => {
