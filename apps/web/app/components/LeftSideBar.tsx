@@ -26,9 +26,10 @@ interface TickerItemProps {
     ask: number | null;
     isUp: boolean;
     lastTradeTime: number;
+    lastTradePrice: number;
 }
 
-const TickerItem: React.FC<TickerItemProps> = ({ symbol, price, quantity, bid, ask, isUp, lastTradeTime }) => {
+const TickerItem: React.FC<TickerItemProps> = ({ symbol, price, quantity, bid, ask, isUp, lastTradeTime, lastTradePrice }) => {
     const formatTime = (timestamp: number) => {
         return new Date(timestamp / 1000).toLocaleTimeString();
     };
@@ -46,13 +47,13 @@ const TickerItem: React.FC<TickerItemProps> = ({ symbol, price, quantity, bid, a
                 <div className="flex flex-col">
                     <span className="text-gray-500 text-xs">Bid</span>
                     <span className="font-mono text-green-600">
-                        ${bid != null ? bid.toLocaleString() : '---'}
+                        ${bid != null ? bid.toLocaleString() : lastTradePrice.toLocaleString()}
                     </span>
                 </div>
                 <div className="flex flex-col">
                     <span className="text-gray-500 text-xs">Ask</span>
                     <span className="font-mono text-red-600">
-                        ${ask != null ? ask.toLocaleString() : '---'}
+                        ${ask != null ? ask.toLocaleString() : lastTradePrice.toLocaleString()}
                     </span>
                 </div>
             </div>
@@ -114,7 +115,7 @@ const LeftSideBar: React.FC = () => {
     }, [symbolData, previousPrices]);
 
     return (
-        <div className="hidden lg:flex w-72 bg-white border-r border-gray-200 h-full flex-col">
+        <div className="w-full bg-white border-r border-gray-200 h-full flex flex-col">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <h2 className="text-lg font-semibold text-gray-900 font-ibm-plex-mono">
                     Live Ticker
@@ -122,11 +123,6 @@ const LeftSideBar: React.FC = () => {
                 <p className="text-sm text-gray-600 mt-1">
                     {symbolData.length} symbols • Live Bid/Ask
                 </p>
-                {orderBook && (
-                    <p className="text-xs text-blue-600 mt-1">
-                        Orderbook: {orderBook.bids.length} bids • {orderBook.asks.length} asks
-                    </p>
-                )}
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -157,6 +153,8 @@ const LeftSideBar: React.FC = () => {
                             return null;
                         };
 
+                        const lastTradePrice = parseFloat(data.data.p);
+                        
                         return (
                             <TickerItem
                                 key={data.data.s}
@@ -167,6 +165,7 @@ const LeftSideBar: React.FC = () => {
                                 ask={getBestAsk()}
                                 isUp={priceChanges.get(data.data.s) || false}
                                 lastTradeTime={data.data.T}
+                                lastTradePrice={lastTradePrice}
                             />
                         );
                     })
