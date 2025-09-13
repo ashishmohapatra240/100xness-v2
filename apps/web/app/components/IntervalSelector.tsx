@@ -13,10 +13,13 @@ const IntervalSelector: React.FC<IntervalSelectorProps> = ({
     className = "",
 }) => {
     const intervals = [
+        { value: "1m", label: "1m" },
         { value: "5m", label: "5m" },
         { value: "30m", label: "30m" },
         { value: "1h", label: "1h" },
+        { value: "6h", label: "6h" },
         { value: "1d", label: "1d" },
+        { value: "3d", label: "3d" },
     ];
 
     return (
@@ -26,12 +29,12 @@ const IntervalSelector: React.FC<IntervalSelectorProps> = ({
                     key={interval.value}
                     onClick={() => onIntervalChange(interval.value)}
                     className={`
-            px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm font-medium rounded-md transition-all duration-200 ease-in-out
-            ${selectedInterval === interval.value
+                        px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                        ${selectedInterval === interval.value
                             ? "bg-black text-white shadow-lg transform scale-105"
                             : "text-gray-600 hover:text-black hover:bg-gray-200 active:scale-95"
                         }
-          `}
+                    `}
                 >
                     {interval.label}
                 </button>
