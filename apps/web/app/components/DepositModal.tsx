@@ -85,7 +85,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                             type="button"
                             onClick={onClose}
                             className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors cursor-pointer"
-                            cursor-pointer
                         >
                             Cancel
                         </button>
@@ -93,7 +92,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                             type="submit"
                             disabled={depositMutation.isPending || !amount}
                             className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            cursor-pointer
                         >
                             {depositMutation.isPending ? 'Depositing...' : 'Deposit'}
                         </button>
