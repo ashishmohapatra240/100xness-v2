@@ -21,3 +21,71 @@ body {
 .font-ibm-plex-mono {
     font-family: var(--font-ibm-plex-mono);
 }
+
+.resize-handle-horizontal {
+    position: relative;
+    width: 8px;
+    background: #e5e7eb;
+    transition: background-color 0.2s ease;
+    cursor: col-resize;
+}
+
+.resize-handle-horizontal:hover {
+    background: #d1d5db;
+}
+
+.resize-handle-horizontal:active {
+    background: #9ca3af;
+}
+
+.resize-handle-horizontal::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 20px;
+    background: #6b7280;
+    border-radius: 2px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.resize-handle-horizontal:hover::after {
+    opacity: 1;
+}
+
+.resize-handle-vertical {
+    position: relative;
+    height: 8px;
+    background: #e5e7eb;
+    transition: background-color 0.2s ease;
+    cursor: row-resize;
+}
+
+.resize-handle-vertical:hover {
+    background: #d1d5db;
+}
+
+.resize-handle-vertical:active {
+    background: #9ca3af;
+}
+
+.resize-handle-vertical::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 3px;
+    background: #6b7280;
+    border-radius: 2px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.resize-handle-vertical:hover::after {
+    opacity: 1;
+}
