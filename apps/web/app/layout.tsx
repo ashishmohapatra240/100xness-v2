@@ -23,8 +23,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "100xness - Building Transportive AI",
-  description: "Building Transportive AI to connect payments with Web3",
+  title: "100xness - Turn Market Volatility into 100x Returns",
+  description: "Buy with upto 100x leverage, because 10x ain't enough",
 };
 
 export default function RootLayout({
