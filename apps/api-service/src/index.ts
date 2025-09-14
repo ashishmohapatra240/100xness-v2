@@ -14,26 +14,15 @@ const PORT = process.env.PORT || 3001;
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-
-      const allowedOrigins = [
-        "http://localhost:3200",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://159.89.161.148",
-        "https://159.89.161.148",
-        "https://100xness.ashishmohapatra.in",
-        "http://100xness.ashishmohapatra.in",
-      ];
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      console.log("CORS blocked origin:", origin);
-      return callback(new Error("Not allowed by CORS"), false);
-    },
+    origin: [
+      "http://localhost:3200",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://159.89.161.148",
+      "https://159.89.161.148",
+      "https://100xness.ashishmohapatra.in",
+      "http://100xness.ashishmohapatra.in",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
@@ -41,9 +30,25 @@ app.use(
       "Authorization",
       "Cookie",
       "X-Requested-With",
-    ]
+      "Accept",
+      "Origin",
+    ],
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
   })
 );
+
+app.options("*", (req, res) => {
+  console.log(`OPTIONS request from origin: ${req.headers.origin}`);
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type,Authorization,Cookie,X-Requested-With,Accept,Origin"
+  );
+  res.sendStatus(200);
+});
 
 app.use((req, res, next) => {
   console.log(
