@@ -52,7 +52,7 @@ const Header = () => {
           {isAuthenticated ? (
             <button
               onClick={() => logoutMutation.mutate()}
-              className="border border-black text-black px-6 py-2 rounded-4xl hover:bg-gray-800 transition-colors font-instrument-sans font-medium cursor-pointer"
+              className="border border-black text-black px-6 py-2 rounded-4xl transition-colors font-instrument-sans font-medium cursor-pointer"
             >
               Logout
             </button>
@@ -141,7 +141,7 @@ const Header = () => {
                     logoutMutation.mutate();
                     closeMobileMenu();
                   }}
-                  className="w-full border border-black text-black px-6 py-3 rounded-4xl hover:bg-gray-50 transition-colors font-instrument-sans font-medium"
+                  className="w-full border border-black text-black px-6 py-3 rounded-4xl transition-colors font-instrument-sans font-medium"
                 >
                   Logout
                 </button>
