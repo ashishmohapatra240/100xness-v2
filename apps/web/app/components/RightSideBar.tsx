@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useWs } from "../hooks/useWs";
 import { useCreateOrder } from "../hooks/useOrders";
+import { useGetBalances } from "../hooks/useBalance";
 
 const getSliderStyle = (selectedIndex: number) => {
     const percentage = (selectedIndex / 4) * 100;
@@ -49,6 +50,7 @@ interface RightSideBarProps {
 const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
     const { messages, orderBook } = useWs();
     const createOrderMutation = useCreateOrder();
+    const { data: balanceData } = useGetBalances();
 
     const [volume, setVolume] = useState("1.00");
     const [takeProfit, setTakeProfit] = useState("");
@@ -93,6 +95,12 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
     const currentAskPrice = currentSymbolData?.ask;
     
     const lastTradePrice = currentSymbolData?.data?.p ? parseFloat(currentSymbolData.data.p) : null;
+
+    const availableBalance = useMemo(() => {
+        if (!balanceData?.balances) return 0;
+        const usdcBalance = balanceData.balances.find(balance => balance.symbol === "USDC");
+        return usdcBalance ? usdcBalance.balance : 0;
+    }, [balanceData]);
 
     const getExecutionPrice = (side: "long" | "short") => {
         if (side === "long") {
@@ -154,6 +162,13 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
         }
 
         const quantity = parseFloat(volume);
+        const notionalValue = quantity * executionPrice;
+        const requiredMargin = notionalValue / leverage;
+
+        if (requiredMargin > availableBalance) {
+            alert(`Insufficient balance! Required margin: $${requiredMargin.toFixed(2)}, Available balance: $${availableBalance.toFixed(2)}`);
+            return;
+        }
 
         const orderData: OrderData = {
             quantity,
