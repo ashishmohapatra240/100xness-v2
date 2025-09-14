@@ -18,10 +18,8 @@ app.use(
       "http://localhost:3200",
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://159.89.161.148",
-      "https://159.89.161.148",
       "https://100xness.ashishmohapatra.in",
-      "http://100xness.ashishmohapatra.in",
+      "http://100xness.ashishmohapatra.in"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -29,26 +27,10 @@ app.use(
       "Content-Type",
       "Authorization",
       "Cookie",
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-    ],
-    preflightContinue: false,
-    optionsSuccessStatus: 200,
+      "X-Requested-With"
+    ]
   })
 );
-
-app.options("*", (req, res) => {
-  console.log(`OPTIONS request from origin: ${req.headers.origin}`);
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Authorization,Cookie,X-Requested-With,Accept,Origin"
-  );
-  res.sendStatus(200);
-});
 
 app.use((req, res, next) => {
   console.log(
