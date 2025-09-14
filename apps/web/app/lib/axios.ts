@@ -40,7 +40,7 @@ axiosInstance.interceptors.response.use(
 
     const requestUrl =
       typeof originalRequest?.url === "string" ? originalRequest.url : "";
-    const public401SafePaths = ["/candles"];
+    const public401SafePaths = ["/candles", "/auth/me"];
     const isPublicPath = public401SafePaths.some((p) =>
       requestUrl.startsWith(p)
     );
@@ -50,11 +50,16 @@ axiosInstance.interceptors.response.use(
       (window.location.pathname.includes("/login") ||
         window.location.pathname.includes("/register"));
 
+    const isHomePage =
+      typeof window !== "undefined" &&
+      window.location.pathname === "/";
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !isAuthPage &&
-      !isPublicPath
+      !isPublicPath &&
+      !isHomePage
     ) {
       originalRequest._retry = true;
 
