@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(uuid()) @db.Uuid
+  email    String  @unique
+  password String
+  name     String
+  decimal  Int     @default(2)
+  assets   Asset[]
+  orders   Order[]
+}
+
+model Asset {
+  id       String @id @default(uuid()) @db.Uuid
+  symbol   Symbol
+  balance  Int
+  decimals Int
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, symbol], name: "user_symbol_unique")
+}
+
+model Order {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @db.Uuid
+  side         Side
+  pnl          Int
+  decimals     Int          @default(4)
+  openingPrice Int
+  closingPrice Int
+  status       OrderStatus
+  qty          Int
+  qtyDecimals  Int          @default(2)
+  leverage     Int          @default(1)
+  takeProfit   Int?
+  stopLoss     Int?
+  margin       Int
+  closeReason  CloseReason?
+  createdAt    DateTime     @default(now())
+  closedAt     DateTime?
+  User         User         @relation(fields: [userId], references: [id])
+}
+
+enum Symbol {
+  USDC
+  BTC
+}
+
+enum Side {
+  long
+  short
+}
+
+enum OrderStatus {
+  open
+  closed
+}
+
+enum CloseReason {
+  TakeProfit
+  StopLoss
+  Manual
+  Liquidation
+}
