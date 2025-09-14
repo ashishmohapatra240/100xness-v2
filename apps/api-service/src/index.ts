@@ -21,6 +21,8 @@ app.use(
         "http://localhost:3200",
         "http://localhost:3000",
         "http://localhost:3001",
+        "http://159.89.161.148",
+        "https://159.89.161.148",
       ];
 
       if (allowedOrigins.includes(origin)) {
