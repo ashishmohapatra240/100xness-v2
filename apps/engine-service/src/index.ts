@@ -31,6 +31,31 @@ let askPrices: Record<string, number> = { BTC: 2005 };
 
 let lastId = "$";
 
+async function updateBalanceInDatabase(userId: string, symbol: string, newBalance: number) {
+  try {
+    await prisma.asset.upsert({
+      where: {
+        user_symbol_unique: {
+          userId,
+          symbol: symbol as any
+        }
+      },
+      create: {
+        userId,
+        symbol: symbol as any,
+        balance: Math.round(newBalance * 100),
+        decimals: 2
+      },
+      update: {
+        balance: Math.round(newBalance * 100)
+      }
+    });
+    console.log(`Updated ${symbol} balance for user ${userId}: ${newBalance}`);
+  } catch (error) {
+    console.error(`Failed to update balance for user ${userId}:`, error);
+  }
+}
+
 async function createSnapshot() {
   try {
     for (const order of open_orders) {
@@ -94,6 +119,12 @@ async function createSnapshot() {
 
     await checkLiquidations();
 
+    for (const [userId, userBalances] of Object.entries(balances)) {
+      for (const [symbol, balance] of Object.entries(userBalances)) {
+        await updateBalanceInDatabase(userId, symbol, balance);
+      }
+    }
+
     console.log("snapshot sent");
   } catch (e) {
     console.log(e);
@@ -154,6 +185,12 @@ async function processOrderLiquidation(
       const remainingMargin = Math.max(0, initialMargin + pnl);
       balances[order.userId]!.USDC =
         (balances[order.userId]!.USDC || 0) + remainingMargin;
+      
+      const userBalance = balances[order.userId];
+      if (userBalance?.USDC !== undefined) {
+        await updateBalanceInDatabase(order.userId, "USDC", userBalance.USDC);
+      }
+      
       console.log(
         `Liquidated order ${order.id}: remaining margin = ${remainingMargin}`
       );
@@ -162,6 +199,12 @@ async function processOrderLiquidation(
         (order.openingPrice * order.qty) / (order.leverage || 1);
       balances[order.userId]!.USDC =
         (balances[order.userId]!.USDC || 0) + initialMargin + pnl;
+      
+      const userBalance = balances[order.userId];
+      if (userBalance?.USDC !== undefined) {
+        await updateBalanceInDatabase(order.userId, "USDC", userBalance.USDC);
+      }
+      
       console.log(
         `Closed order ${order.id} (${reason}): returned ${initialMargin + pnl}`
       );
@@ -418,6 +461,8 @@ async function engine() {
               balances[userId]!.USDC =
                 (balances[userId]!.USDC || 0) - requiredMargin;
 
+              await updateBalanceInDatabase(userId, "USDC", balances[userId]!.USDC);
+
               console.log(
                 `Order ${orderId}: Deducted margin ${requiredMargin} (${leverage || 1}x leverage on ${openingPrice * qty} notional at ${side === "buy" ? "ask" : "bid"} price ${openingPrice})`
               );
@@ -553,6 +598,11 @@ async function engine() {
               (order.openingPrice * order.qty) / (order.leverage || 1);
             balances[userId]!.USDC =
               (balances[userId]!.USDC || 0) + initialMargin + finalPnl;
+
+            const userBalance = balances[userId];
+            if (userBalance?.USDC !== undefined) {
+              await updateBalanceInDatabase(userId, "USDC", userBalance.USDC);
+            }
 
             console.log(
               `Manual close order ${orderId} (${closeReason}): returned ${initialMargin + finalPnl}`
