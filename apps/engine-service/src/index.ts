@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { redis } from "@repo/redis";
 import { PrismaClient } from "@prisma/client";
 
@@ -49,11 +52,11 @@ async function createSnapshot() {
         where: { id: order.id },
         update: {
           side: order.side == "buy" ? "long" : "short",
-          pnl: Math.round(currentPnl * 10000), // Update with current PnL
+          pnl: Math.round(currentPnl * 10000),
           decimals: 4,
           openingPrice: Math.round(order.openingPrice * 10000),
           closingPrice: 0,
-          status: "open", // Only update if still in open_orders
+          status: "open",
           qty: Math.round(order.qty * 100),
           qtyDecimals: 2,
           leverage: order.leverage || 1,
@@ -264,7 +267,7 @@ async function loadSnapshot() {
 setInterval(createSnapshot, 10000);
 
 async function engine() {
-  console.log("Brumm brum, starting engine");
+  console.log("Brumm brum, starting Trading Engine on port 3002");
 
   await loadSnapshot();
 

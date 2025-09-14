@@ -1,0 +1,26 @@
+{
+  "name": "engine-service",
+  "version": "1.0.0",
+  "description": "Trading Engine service for 100xness trading platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/index.js",
+    "dev": "tsc -b && node dist/index.js",
+    "dev:watch": "tsc -b --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@repo/redis": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@repo/typescript-config": "workspace:*"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "dotenv": "^17.2.2",
+    "ioredis": "^5.7.0",
+    "prisma": "^6.15.0"
+  }
+}
