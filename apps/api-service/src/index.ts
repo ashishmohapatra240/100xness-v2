@@ -23,6 +23,8 @@ app.use(
         "http://localhost:3001",
         "http://159.89.161.148",
         "https://159.89.161.148",
+        "https://100xness.ashishmohapatra.in",
+        "http://100xness.ashishmohapatra.in",
       ];
 
       if (allowedOrigins.includes(origin)) {
