@@ -6,25 +6,35 @@ A real-time options trading platform like [Exness](https://www.exness.com/) buil
 
 This project uses [Turborepo](https://turbo.build/) for monorepo management and includes:
 
-- **Backend** (`apps/backend/`) - Node.js/Express API server with trading engine
+- **API Service** (`apps/api-service/`) - Express API server for authentication, trading, and balance management (Port 3001)
+- **Engine Service** (`apps/engine-service/`) - Trading engine for order processing and price monitoring (Port 3002)
+- **Price Poller Service** (`apps/price-poller-service/`) - WebSocket connection to Backpack Exchange for real-time prices (Port 3003)
 - **Web** (`apps/web/`) - Next.js frontend application
-- **Shared Packages** (`packages/`) - Shared utilities, UI components, and configurations
+- **Shared Packages** (`packages/`) - Shared utilities, UI components, types, and configurations
 
 ## Overview
 
-### 1. **Web Server** (`src/server/`)
+### 1. **API Service** (`apps/api-service/`)
 
-- Used for user registration and login with JWT, Order creation and management and Balance checking
-- Built with express and typescript
+- HTTP API server for user authentication (JWT), order management, balance operations, and candle data
+- Communicates with the Trading Engine via Redis streams
+- Built with Express.js and TypeScript
+- Runs on **Port 3001**
 
-### 2. **Trading Engine** (`src/engine/`)
+### 2. **Engine Service** (`apps/engine-service/`)
 
-- Processes trading orders and manages real-time trading logic, Monitors open positions for take-profit and stop-loss, Handles automatic order closures, Manages user balances in real-time, Saves order data to the database
-- Built with Node with Redis streams
+- Core trading engine that processes orders, manages positions, handles liquidations
+- Monitors open positions for take-profit and stop-loss triggers
+- Manages user balances in real-time and saves order data to the database
+- Built with Node.js and Redis streams
+- Runs on **Port 3002**
 
-### 3. **Price Poller** (`src/price-poller/`)
+### 3. **Price Poller Service** (`apps/price-poller-service/`)
 
-- Fetches real-time BTC_USDC prices by a WebSocket connection to Backpack Exchange and sends price data to the trading engine
+- Maintains WebSocket connection to Backpack Exchange for real-time BTC_USDC prices
+- Sends price updates to the trading engine via Redis streams
+- Built with Node.js and WebSocket
+- Runs on **Port 3003**
 
 ## Architecture
 <img width="1345" height="742" alt="image" src="https://github.com/user-attachments/assets/36d47a4d-3350-489f-9628-7a1f5a1b5878" />
@@ -128,26 +138,45 @@ pnpm run check-types
 
 #### Manual Service Management
 
-The backend has three separate services that need to be running:
+The backend consists of three separate microservices that need to be running:
 
-1. **Start the Web Server:**
+1. **Start the API Service (Port 3001):**
 
    ```bash
-   pnpm run dev:server
+   pnpm run dev:api
    ```
 
-2. **Start the Trading Engine:**
+2. **Start the Engine Service (Port 3002):**
 
    ```bash
    pnpm run dev:engine
    ```
 
-3. **Start the Price Poller:**
+3. **Start the Price Poller Service (Port 3003):**
    ```bash
    pnpm run dev:price-poller
    ```
 
 **Note**: All three services must be running for the platform to work properly.
+
+#### Production Service
+
+For production builds:
+
+1. **Build and start API Service:**
+   ```bash
+   pnpm run start:api
+   ```
+
+2. **Build and start Engine Service:**
+   ```bash
+   pnpm run start:engine
+   ```
+
+3. **Build and start Price Poller Service:**
+   ```bash
+   pnpm run start:price-poller
+   ```
 
 ## API Endpoints
 
@@ -173,10 +202,17 @@ The backend has three separate services that need to be running:
 
 - `GET /candles`
 
-### Redis Streams
+### Inter-Service Communication
 
-- `engine-stream`: Orders and price updates flow through this
-- `callback-queue`: Responses and confirmations flow through this
+The services communicate via Redis streams:
+
+- `engine-stream`: Price updates and order requests flow from API Service and Price Poller to Engine Service
+- `callback-queue`: Order confirmations and status updates flow from Engine Service back to API Service
+
+**Service Ports:**
+- API Service: 3001
+- Engine Service: 3002 (internal processing, no HTTP endpoints)
+- Price Poller Service: 3003 (internal processing, no HTTP endpoints)
 
 ## Turbo Development
 
