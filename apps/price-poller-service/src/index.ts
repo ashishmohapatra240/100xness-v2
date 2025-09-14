@@ -4,6 +4,8 @@ import { redis } from "@repo/redis";
 const url = "wss://ws.backpack.exchange";
 const ws = new WebSocket(url);
 
+console.log("Starting Price Poller service on port 3003");
+
 redis.on("connect", () => {
   console.log("connected to redis");
 });
