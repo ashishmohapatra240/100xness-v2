@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../config";
 import { redis } from "@repo/redis";
 import { randomUUID } from "crypto";
-import { RedisSubscriber } from "../../redisSubscriber";
+import { RedisSubscriber } from "../redisSubscriber";
 
 async function getBalance(id: string) {
   const userAssets = await prisma.user.findUnique({
