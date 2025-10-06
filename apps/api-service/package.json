@@ -9,11 +9,9 @@
     "dev": "tsc -b && node dist/index.js",
     "dev:watch": "tsc -b --watch"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@repo/redis": "workspace:*",
+    "@repo/prisma": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/cookie-parser": "^1.4.9",
@@ -22,13 +20,11 @@
     "@types/jsonwebtoken": "^9.0.10"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "ioredis": "^5.7.0",
-    "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.15.0"
+    "jsonwebtoken": "^9.0.2"
   }
 }

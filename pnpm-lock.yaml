@@ -20,9 +20,6 @@ importers:
 
   apps/api-service:
     dependencies:
-      '@prisma/client':
-        specifier: ^6.15.0
-        version: 6.15.0(prisma@6.15.0(typescript@5.9.2))(typescript@5.9.2)
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -41,10 +38,10 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
-      prisma:
-        specifier: ^6.15.0
-        version: 6.15.0(typescript@5.9.2)
     devDependencies:
+      '@repo/prisma':
+        specifier: workspace:*
+        version: link:../../packages/prisma
       '@repo/redis':
         specifier: workspace:*
         version: link:../../packages/redis
@@ -67,67 +64,18 @@ importers:
         specifier: ^9.0.10
         version: 9.0.10
 
-  apps/backend:
-    dependencies:
-      '@prisma/client':
-        specifier: ^6.15.0
-        version: 6.15.0(prisma@6.15.0(typescript@5.9.2))(typescript@5.9.2)
-      '@types/express':
-        specifier: ^5.0.3
-        version: 5.0.3
-      '@types/jsonwebtoken':
-        specifier: ^9.0.10
-        version: 9.0.10
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
-      cookie-parser:
-        specifier: ^1.4.7
-        version: 1.4.7
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.5
-      express:
-        specifier: ^5.1.0
-        version: 5.1.0
-      ioredis:
-        specifier: ^5.7.0
-        version: 5.7.0
-      jsonwebtoken:
-        specifier: ^9.0.2
-        version: 9.0.2
-      ws:
-        specifier: ^8.18.3
-        version: 8.18.3
-    devDependencies:
-      '@repo/redis':
-        specifier: workspace:*
-        version: link:../../packages/redis
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@types/cookie-parser':
-        specifier: ^1.4.9
-        version: 1.4.9(@types/express@5.0.3)
-      '@types/cors':
-        specifier: ^2.8.19
-        version: 2.8.19
-
   apps/engine-service:
     dependencies:
-      '@prisma/client':
-        specifier: ^6.15.0
-        version: 6.15.0(prisma@6.15.0(typescript@5.9.2))(typescript@5.9.2)
       dotenv:
         specifier: ^17.2.2
         version: 17.2.2
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0
-      prisma:
-        specifier: ^6.15.0
-        version: 6.15.0(typescript@5.9.2)
     devDependencies:
+      '@repo/prisma':
+        specifier: workspace:*
+        version: link:../../packages/prisma
       '@repo/redis':
         specifier: workspace:*
         version: link:../../packages/redis
@@ -277,6 +225,19 @@ importers:
       typescript-eslint:
         specifier: ^8.40.0
         version: 8.40.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
+
+  packages/prisma:
+    dependencies:
+      '@prisma/client':
+        specifier: ^6.15.0
+        version: 6.15.0(prisma@6.15.0(typescript@5.9.2))(typescript@5.9.2)
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      prisma:
+        specifier: ^6.15.0
+        version: 6.15.0(typescript@5.9.2)
 
   packages/redis:
     dependencies:
