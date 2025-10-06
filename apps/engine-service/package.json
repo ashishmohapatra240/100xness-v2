@@ -14,13 +14,12 @@
   "license": "ISC",
   "devDependencies": {
     "@repo/redis": "workspace:*",
+    "@repo/prisma": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/typescript-config": "workspace:*"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
     "dotenv": "^17.2.2",
-    "ioredis": "^5.7.0",
-    "prisma": "^6.15.0"
+    "ioredis": "^5.7.0"
   }
 }
