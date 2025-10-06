@@ -2,10 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { redis } from "@repo/redis";
-import { PrismaClient } from "@prisma/client";
-
+import { prisma } from "@repo/prisma";
 const client = redis.duplicate();
-const prisma = new PrismaClient();
 
 type UserBalances = Record<string, number>;
 
