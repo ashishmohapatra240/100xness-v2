@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { prisma } from "../config";
-
+import { prisma } from "@repo/prisma";
 
 interface JwtPayload {
   id: string;

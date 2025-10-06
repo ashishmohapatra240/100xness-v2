@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../config";
 import { redis } from "@repo/redis";
+import { prisma } from "@repo/prisma";
 import { randomUUID } from "crypto";
 import { RedisSubscriber } from "../redisSubscriber";
 

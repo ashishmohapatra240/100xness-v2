@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
-import { prisma } from "../config"
 import { redis } from "@repo/redis"
+import { prisma } from "@repo/prisma"
 
 export const getBalance = async (req: Request, res: Response) => {
     const userId = req.user?.id;

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { prisma } from "../config";
+import {prisma} from "@repo/prisma";
 
 export const login = async (req: Request, res: Response) => {
   try {
