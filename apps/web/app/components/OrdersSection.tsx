@@ -133,8 +133,8 @@ const OrdersSection: React.FC = () => {
       typeof order.price === "number" ? order.price : parseFloat(order.price);
 
     // For PnL calculation, use the price at which the order would be closed:
-    // Long orders (buy) would be closed by selling at bid price
-    // Short orders (sell) would be closed by buying at ask price
+    // Long orders would be closed at bid price (selling position)
+    // Short orders would be closed at ask price (buying to cover)
     const marketPrice =
       order.orderType === "long" ? currentPrice.bid : currentPrice.ask;
     const quantity =
