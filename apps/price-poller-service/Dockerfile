@@ -21,7 +21,7 @@ COPY apps/price-poller-service/src ./apps/price-poller-service/src
 COPY apps/price-poller-service/tsconfig.json ./apps/price-poller-service/
 
 WORKDIR /app/apps/price-poller-service
-RUN pnpm build
+RUN npx tsc -b
 
 EXPOSE 3003
 

@@ -26,7 +26,7 @@ WORKDIR /app/packages/prisma
 RUN npx prisma generate
 
 WORKDIR /app/apps/engine-service
-RUN pnpm build
+RUN npx tsc -b
 
 EXPOSE 3002
 
