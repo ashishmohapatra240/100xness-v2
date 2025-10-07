@@ -6,17 +6,16 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
-COPY packages/*/package.json ./packages/
-COPY apps/*/package.json ./apps/
+COPY packages/redis/package.json ./packages/redis/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
+COPY packages/types/package.json ./packages/types/
+COPY apps/price-poller-service/package.json ./apps/price-poller-service/
 
-RUN mkdir -p packages/redis packages/typescript-config packages/types packages/ui packages/eslint-config
+RUN pnpm install --frozen-lockfile
 
 COPY packages/redis/ ./packages/redis/
 COPY packages/typescript-config/ ./packages/typescript-config/
 COPY packages/types/ ./packages/types/
-
-RUN pnpm install --frozen-lockfile
-
 COPY apps/price-poller-service/src ./apps/price-poller-service/src
 COPY apps/price-poller-service/tsconfig.json ./apps/price-poller-service/
 
@@ -25,4 +24,4 @@ RUN npx tsc -b
 
 EXPOSE 3003
 
-CMD ["pnpm", "start"]
+CMD ["node", "dist/index.js"]
