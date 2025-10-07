@@ -7,8 +7,8 @@ export const useGetBalances = () => {
     return useQuery({
         queryKey: ['balances'],
         queryFn: balanceService.getBalances,
-        staleTime: 30000, // 30 seconds
-        refetchInterval: 60000, // 1 minute
+        staleTime: 30000,
+        refetchInterval: 60000,
     });
 };
 
@@ -28,11 +28,11 @@ export const useDeposit = () => {
     return useMutation({
         mutationFn: (depositData: DepositRequest) => balanceService.deposit(depositData),
         onSuccess: (data) => {
-            // Invalidate and refetch balance queries
             queryClient.invalidateQueries({ queryKey: ['balances'] });
             queryClient.invalidateQueries({ queryKey: ['balance', data.symbol] });
             
-            toast.success(`Successfully deposited ${data.balance} ${data.symbol}`);
+            const displayBalance = data.balance / Math.pow(10, data.decimals);
+            toast.success(`Successfully deposited ${displayBalance.toFixed(data.decimals)} ${data.symbol}`);
         },
         onError: (error: any) => {
             const errorMessage = error.response?.data?.error || 'Failed to deposit';
