@@ -90,8 +90,8 @@ const Docs = () => {
                         Automatic liquidation system runs on every price update:
                       </p>
                       <div className="bg-gray-50 p-4 font-ibm-plex-mono text-xs">
-                        <div>• Take Profit: buy orders when price ≥ target</div>
-                        <div>• Stop Loss: sell orders when price ≤ target</div>
+                        <div>• Take Profit: long orders when price ≥ target, short orders when price ≤ target</div>
+                        <div>• Stop Loss: long orders when price ≤ target, short orders when price ≥ target</div>
                         <div>
                           • Margin Call: when remaining margin ≤ 5% of initial
                         </div>
@@ -169,8 +169,8 @@ const Docs = () => {
                         checks:
                       </p>
                       <div className="bg-gray-50 p-4 font-ibm-plex-mono text-xs">
-                        <div>• Bid price: Used for sell order executions</div>
-                        <div>• Ask price: Used for buy order executions</div>
+                        <div>• Bid price: Used for long order executions (closing) and short order entries</div>
+                        <div>• Ask price: Used for short order executions (closing) and long order entries</div>
                         <div>• Mid price: (bid + ask) / 2 for display</div>
                         <div>• Spread: Difference between bid and ask</div>
                       </div>
@@ -485,7 +485,246 @@ const Docs = () => {
                 </div>
               </div>
 
-              {/* Risk Management */}
+              <div>
+                <h3 className="text-xl font-semibold text-black mb-6 font-dm-sans">
+                  Request-Response Architecture
+                </h3>
+                <div className="space-y-6">
+                  <div className="border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold mb-4 font-dm-sans">
+                      Core Communication Pattern
+                    </h4>
+                    <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                      <p>
+                        The system implements an asynchronous request-response pattern using Redis streams as a message bus and an in-memory callback registry. This enables non-blocking communication between the API service and the trading engine while maintaining request-response semantics.
+                      </p>
+                      
+                      <div className="bg-black text-white p-4 font-ibm-plex-mono text-xs overflow-x-auto">
+                        {`// 1. Trade controller builds payload
+const orderId = generateUniqueId();
+const payload = {
+  userId,
+  side: "long",
+  qty: 1,
+  leverage: 10,
+  takeProfit: 100000,
+  stopLoss: 90000
+};
+
+// 2. Send request and wait for callback
+const result = await sendRequestAndWait(orderId, {
+  kind: "create-order",
+  payload
+});`}
+                      </div>
+
+                      <p className="pt-2">
+                        The <span className="font-ibm-plex-mono text-xs bg-gray-100 px-1">sendRequestAndWait</span> function orchestrates two parallel operations:
+                      </p>
+
+                      <div className="bg-gray-50 p-4 border-l-4 border-gray-300">
+                        <div className="font-medium mb-2">Parallel Operations:</div>
+                        <div className="space-y-2 font-ibm-plex-mono text-xs">
+                          <div>• <span className="font-semibold">Publishing:</span> addToStream(id, request) → XADD to engine-stream</div>
+                          <div>• <span className="font-semibold">Waiting:</span> subscriber.waitForMessage(id) → Promise with 5s timeout</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="border border-gray-200 p-6">
+                      <h4 className="text-lg font-semibold mb-4 font-dm-sans">
+                        Publishing to Engine Stream
+                      </h4>
+                      <div className="space-y-3 text-sm text-gray-700">
+                        <div className="bg-black text-white p-4 font-ibm-plex-mono text-xs">
+                          {`async function addToStream(
+  id: string, 
+  request: Request
+) {
+  await redis.xadd(
+    "engine-stream",
+    "*",
+    "id", id,
+    "request", JSON.stringify(request)
+  );
+}`}
+                        </div>
+                        <p>
+                          Each message contains:
+                        </p>
+                        <div className="bg-gray-50 p-3 space-y-1 font-ibm-plex-mono text-xs">
+                          <div>• <span className="font-semibold">id:</span> Unique correlation ID</div>
+                          <div>• <span className="font-semibold">request:</span> JSON payload with kind and data</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-gray-200 p-6">
+                      <h4 className="text-lg font-semibold mb-4 font-dm-sans">
+                        Callback Registration
+                      </h4>
+                      <div className="space-y-3 text-sm text-gray-700">
+                        <div className="bg-black text-white p-4 font-ibm-plex-mono text-xs">
+                          {`waitForMessage(id: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Register callback in memory
+    this.callbacks[id] = resolve;
+    
+    // 5-second timeout
+    setTimeout(() => {
+      if (this.callbacks[id]) {
+        delete this.callbacks[id];
+        reject(new Error("Timeout"));
+      }
+    }, 5000);
+  });
+}`}
+                        </div>
+                        <p>
+                          The callback is stored in an in-memory map keyed by the correlation ID, with automatic cleanup on timeout.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold mb-4 font-dm-sans">
+                      Engine Processing Loop
+                    </h4>
+                    <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                      <p>
+                        The engine service runs a continuous loop that consumes from the engine-stream:
+                      </p>
+                      <div className="bg-black text-white p-4 font-ibm-plex-mono text-xs overflow-x-auto">
+                        {`while (true) {
+  // Block until messages arrive
+  const messages = await redis.xread(
+    "BLOCK", 0,
+    "STREAMS", "engine-stream", lastId
+  );
+  
+  for (const [stream, entries] of messages) {
+    for (const [id, data] of entries) {
+      const request = JSON.parse(data.request);
+      
+      switch (request.kind) {
+        case "create-order":
+          // Validate balance, calculate margin
+          // Create order in memory & database
+          await processCreateOrder(request.payload);
+          break;
+        case "close-order":
+          await processCloseOrder(request.payload);
+          break;
+        case "price-update":
+          await processPriceUpdate(request.payload);
+          break;
+      }
+      
+      // Send callback confirmation
+      await redis.xadd(
+        "callback-queue",
+        "*",
+        "id", data.id,
+        "status", "created" // or other status
+      );
+      
+      lastId = id;
+    }
+  }
+}`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold mb-4 font-dm-sans">
+                      Callback Queue Consumer
+                    </h4>
+                    <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                      <p>
+                        A separate subscriber loop continuously listens for callbacks:
+                      </p>
+                      <div className="bg-black text-white p-4 font-ibm-plex-mono text-xs overflow-x-auto">
+                        {`async runLoop() {
+  while (true) {
+    // Block indefinitely waiting for callbacks
+    const results = await redis.xread(
+      "BLOCK", 0,
+      "STREAMS", "callback-queue", "$"
+    );
+    
+    for (const [stream, messages] of results) {
+      for (const [messageId, data] of messages) {
+        const callbackId = data.id;
+        
+        // Find the waiting promise
+        if (callbackId && this.callbacks[callbackId]) {
+          // Resolve the promise
+          this.callbacks[callbackId]();
+          
+          // Clean up
+          delete this.callbacks[callbackId];
+        }
+      }
+    }
+  }
+}`}
+                      </div>
+                      <p className="pt-2">
+                        When a callback arrives, the subscriber immediately resolves the corresponding Promise, unblocking the original API request and allowing it to return the response to the client.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-300 p-6">
+                    <h4 className="text-lg font-semibold mb-4 font-dm-sans">
+                      Complete Flow Summary
+                    </h4>
+                    <div className="space-y-2 text-sm text-gray-700">
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">1</span>
+                        <span>Trade controller calls <code className="font-ibm-plex-mono text-xs bg-white px-1">createOrder</code>, generates unique ID, builds payload</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">2</span>
+                        <span>Calls <code className="font-ibm-plex-mono text-xs bg-white px-1">sendRequestAndWait(id, payload)</code> which executes both operations in parallel</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">3</span>
+                        <span><code className="font-ibm-plex-mono text-xs bg-white px-1">addToStream</code> publishes message to engine-stream via XADD</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">4</span>
+                        <span><code className="font-ibm-plex-mono text-xs bg-white px-1">waitForMessage</code> creates Promise, registers callback in memory map with 5s timeout</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">5</span>
+                        <span>Engine consumes message from engine-stream, processes order (validate, execute, store)</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">6</span>
+                        <span>Engine publishes callback to callback-queue via XADD with original correlation ID and status</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">7</span>
+                        <span>Subscriber's <code className="font-ibm-plex-mono text-xs bg-white px-1">runLoop</code> receives callback, extracts ID, finds matching callback in map</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">8</span>
+                        <span>Calls <code className="font-ibm-plex-mono text-xs bg-white px-1">this.callbacks[callbackId]()</code> to resolve Promise, deletes callback from map</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-ibm-plex-mono text-xs bg-white px-2 py-1 rounded mr-3 font-semibold">9</span>
+                        <span>API request unblocks, returns response to client</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <h3 className="text-xl font-semibold text-black mb-6 font-dm-sans">
                   Risk Management & Liquidation Engine
@@ -501,7 +740,7 @@ const Docs = () => {
 const requiredMargin = (openingPrice * qty) / leverage;
 
 // Remaining margin after PnL
-const currentPnl = side === 'buy' 
+const currentPnl = side === 'long' 
   ? (currentPrice - openingPrice) * qty
   : (openingPrice - currentPrice) * qty;
 
@@ -530,7 +769,6 @@ const remainingMargin = initialMargin + currentPnl;`}
                 </div>
               </div>
 
-              {/* Performance Optimizations */}
               <div>
                 <h3 className="text-xl font-semibold text-black mb-6 font-dm-sans">
                   Performance & Scalability
