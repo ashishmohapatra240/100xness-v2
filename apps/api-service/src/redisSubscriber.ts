@@ -4,64 +4,68 @@ export const CALLBACK_QUEUE = "callback-queue";
 
 export class RedisSubscriber {
   private client: Redis;
-  private callbacks: Record<string, () => {}>;
+  private callbacks: Record<string, () => void>;
 
   constructor() {
     this.client = new Redis();
-    this.runLoop();
     this.callbacks = {};
+    this.runLoop();
   }
 
   async runLoop() {
     while (true) {
-      const response = await this.client.xread(
-        "BLOCK",
-        0,
-        "STREAMS",
-        CALLBACK_QUEUE,
-        "$"
-      );
+      try {
+        const response = await this.client.xread(
+          "BLOCK",
+          0,
+          "STREAMS",
+          CALLBACK_QUEUE,
+          "$"
+        );
+        if (!response || response.length === 0) continue;
 
-      if (!response || response.length === 0) continue;
+        const [, messages] = response[0]!;
+        if (!messages || messages.length === 0) continue;
 
-      const [, messages] = response[0]!;
-      if (!messages || messages.length === 0) continue;
+        for (const [id, rawFields] of messages) {
+          const fields = rawFields as string[];
 
-      const [id, rawFields] = messages[0]!;
-      const fields = rawFields as string[];
+          const data: Record<string, string> = {};
+          for (let i = 0; i < fields.length; i += 2)
+            data[fields[i]!] = fields[i + 1]!;
 
-      const data: Record<string, string> = {};
-      for (let i = 0; i < fields.length; i += 2) {
-        const key = fields[i]!;
-        const value = fields[i + 1]!;
-        data[key] = value;
-      }
+          const callbackId = data.id;
+          console.log(`[SUBSCRIBER] Received callback:`, data);
 
-      const callbackId = data.id;
-      console.log(`[SUBSCRIBER] Received callback message:`, data);
-      
-      if (callbackId && this.callbacks[callbackId]) {
-        console.log(`[SUBSCRIBER] Found matching callback for ID: ${callbackId}, resolving promise`);
-        this.callbacks[callbackId]();
-        delete this.callbacks[callbackId];
-      } else {
-        console.log(`[SUBSCRIBER] No matching callback found for ID: ${callbackId}`);
+          const fn = callbackId ? this.callbacks[callbackId] : undefined;
+          if (fn) {
+            fn();
+            delete this.callbacks[callbackId!];
+          } else {
+            console.log(`[SUBSCRIBER] No waiter for id: ${callbackId}`);
+          }
+        }
+      } catch (err) {
+        console.error(`[SUBSCRIBER] xread error:`, err);
       }
     }
   }
 
   waitForMessage(callbackId: string) {
     return new Promise<void>((resolve, reject) => {
-      console.log(`[SUBSCRIBER] Waiting for callback message with ID: ${callbackId}`);
-      this.callbacks[callbackId] = resolve as () => {};
+      console.log(`[SUBSCRIBER] Waiting for callback id: ${callbackId}`);
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         if (this.callbacks[callbackId]) {
-          console.log(`[SUBSCRIBER] Timeout waiting for message with ID: ${callbackId}`);
           delete this.callbacks[callbackId];
           reject(new Error("Timeout waiting for message"));
         }
       }, 5000);
+
+      this.callbacks[callbackId] = () => {
+        clearTimeout(timer);
+        resolve();
+      };
     });
   }
 }
