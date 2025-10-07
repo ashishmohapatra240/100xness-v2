@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import { redis } from "@repo/redis"
 import { prisma } from "@repo/prisma"
+import { DepositBalanceBodySchema, GetBalanceByAssetParamsSchema } from "../schemas/balance.type";
 
 export const getBalance = async (req: Request, res: Response) => {
     const userId = req.user?.id;
@@ -28,7 +29,13 @@ export const getBalanceByAsset = async (req: Request, res: Response) => {
         return res.json("user not found");
     }
 
-    const { symbol } = req.params;
+    const result = GetBalanceByAssetParamsSchema.safeParse(req.params);
+    if (!result.success) {
+        return res.status(400).json({ error: result.error.message });
+    }
+
+    const { symbol } = result.data;
+
     if (!symbol) return res.json("asset required");
     const record = await prisma.asset.findUnique({
         where: {
@@ -55,7 +62,12 @@ export const depositBalance = async (req: Request, res: Response) => {
         return res.json("user not found");
     }
 
-    const { symbol, amount, decimals } = req.body;
+    const result = DepositBalanceBodySchema.safeParse(req.body);
+    if (!result.success) {
+        return res.status(400).json({ error: result.error.message });
+    }
+
+    const { symbol, amount, decimals } = result.data;
 
     const validSymbols = ['USDC', 'BTC'];
     if (!validSymbols.includes(symbol)) {

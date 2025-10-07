@@ -1,10 +1,17 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import {prisma} from "@repo/prisma";
+import { LoginSchema, RegisterSchema } from "../schemas/auth.type";
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const result = LoginSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.message });
+    }
+
+    const { email, password } = result.data;
 
     if (!email || !password) {
       return res.status(400).json({ error: "email and password are required" });
@@ -50,7 +57,12 @@ export const login = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const result = RegisterSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.message });
+    }
+
+    const { name, email, password } = result.data;
 
     if (!name || !email || !password) {
       return res

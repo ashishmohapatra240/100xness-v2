@@ -3,6 +3,7 @@ import { redis } from "@repo/redis";
 import { prisma } from "@repo/prisma";
 import { randomUUID } from "crypto";
 import { RedisSubscriber } from "../redisSubscriber";
+import { CloseOrderBodySchema, CreateOrderBodySchema } from "../schemas/trade.type";
 
 async function getBalance(id: string) {
   const userAssets = await prisma.user.findUnique({
@@ -70,6 +71,11 @@ export const createOrder = async (req: Request, res: Response) => {
       return res.json("user not found");
     }
 
+    const result = CreateOrderBodySchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.message });
+    }
+
     const {
       asset,
       side,
@@ -78,7 +84,7 @@ export const createOrder = async (req: Request, res: Response) => {
       leverage,
       takeProfit,
       stopLoss,
-    } = req.body;
+    } = result.data;
 
     const id = randomUUID();
     console.log(`[CONTROLLER] Creating order ${id} for user ${userId}:`, {
@@ -131,21 +137,21 @@ export const closeOrder = async (req: Request, res: Response) => {
     }
 
     const { orderId } = req.params;
-    const { pnl, closeReason } = req.body;
+    const result = CloseOrderBodySchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.message });
+    }
+
+    const { pnl, closeReason = "Manual" } = result.data;
 
     if (!orderId) {
       return res.status(400).json({ error: "orderId is required" });
     }
 
-    const validCloseReasons = [
-      "TakeProfit",
-      "StopLoss",
-      "Manual",
-      "Liquidation",
-    ];
-    if (closeReason && !validCloseReasons.includes(closeReason)) {
+
+    if (!closeReason) {
       return res.status(400).json({
-        error: `Invalid closeReason. Must be one of: ${validCloseReasons.join(", ")}`,
+        error: `closeReason is required. Must be one of: TakeProfit, StopLoss, Manual, Liquidation`,
       });
     }
 
@@ -170,7 +176,7 @@ export const closeOrder = async (req: Request, res: Response) => {
       payload: {
         orderId,
         userId,
-        closeReason: closeReason || "Manual",
+        closeReason,
         pnl: pnl ? Number(pnl) : undefined,
         closedAt: Date.now(),
       },

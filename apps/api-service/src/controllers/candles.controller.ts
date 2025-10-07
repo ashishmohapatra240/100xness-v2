@@ -1,8 +1,14 @@
 import { Request, Response } from "express";
+import { GetCandlesQuerySchema } from "../schemas/candles.type";
 
 export const getCandles = async (req: Request, res: Response) => {
   try {
-    const { ts: timeframe, startTime, endTime, asset } = req.query;
+    const result = GetCandlesQuerySchema.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.message });
+    }
+
+    const { ts: timeframe, startTime, endTime, asset } = result.data;
 
     if (!timeframe || !startTime || !asset) {
       return res.status(400).json({
