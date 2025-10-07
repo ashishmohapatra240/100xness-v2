@@ -21,7 +21,7 @@ ws.on("open", () => {
     id: 1,
   };
   ws.send(JSON.stringify(subscribeMessage));
-  console.log("sent", subscribeMessage);
+  // console.log("sent", subscribeMessage);
 });
 
 ws.on("message", async (message) => {
@@ -33,7 +33,7 @@ ws.on("message", async (message) => {
       "data",
       JSON.stringify({ kind: "price-update", payload: data })
     );
-    console.log(data);
+    // console.log(data);
   } catch (e) {
     console.log(e);
   }
