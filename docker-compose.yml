@@ -3,3 +3,32 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+  api-service:
+    build:
+      context: .
+      dockerfile: apps/api-service/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - redis
+  engine-service:
+    build:
+      context: .
+      dockerfile: apps/engine-service/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+  price-poller-service:
+    build:
+      context: .
+      dockerfile: apps/price-poller-service/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
