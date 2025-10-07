@@ -20,10 +20,12 @@ RUN pnpm install --frozen-lockfile
 COPY apps/api-service/src ./apps/api-service/src
 COPY apps/api-service/tsconfig.json ./apps/api-service/
 
-COPY apps/backend/prisma ./apps/api-service/prisma
+COPY packages/prisma/prisma ./packages/prisma/prisma
+
+WORKDIR /app/packages/prisma
+RUN npx prisma generate
 
 WORKDIR /app/apps/api-service
-RUN npx prisma generate
 RUN pnpm build
 
 EXPOSE 3001
