@@ -35,7 +35,8 @@ const Marketplace = () => {
   const totalBalance =
     balanceData?.balances?.reduce((total, balance) => {
       if (balance.symbol === "USDC") {
-        return total + balance.balance;
+        const balanceInDollars = balance.balance / Math.pow(10, balance.decimals);
+        return total + balanceInDollars;
       }
       return total;
     }, 0) || 0;
@@ -53,14 +54,12 @@ const Marketplace = () => {
     const initChart = () => {
       if (!containerRef.current) return;
 
-      // Clear any existing chart
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
         seriesRef.current = null;
       }
 
-      // Get parent container dimensions
       const parentElement = containerRef.current.parentElement;
       const rect =
         parentElement?.getBoundingClientRect() ||
@@ -107,7 +106,6 @@ const Marketplace = () => {
       });
       seriesRef.current = series;
 
-      // Enhanced resize observer
       const ro = new ResizeObserver((entries) => {
         if (entries[0] && chartRef.current) {
           const { width, height } = entries[0].contentRect;
@@ -154,7 +152,6 @@ const Marketplace = () => {
             timestamp = Math.floor(timestamp / 1000);
           }
         } else {
-          // It's a date string
           timestamp = Math.floor(new Date(timeValue).getTime() / 1000);
         }
       } else {
