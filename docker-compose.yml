@@ -10,9 +10,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - redis
   engine-service:
@@ -20,7 +18,6 @@ services:
       context: .
       dockerfile: apps/engine-service/Dockerfile
     environment:
-      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
