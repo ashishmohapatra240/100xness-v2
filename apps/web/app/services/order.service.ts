@@ -3,27 +3,29 @@ import axiosInstance from "../lib/axios";
 type OrderType = 'long' | 'short';
 
 export const orderService = {
-    createOrder: async (quantity: number, orderType: OrderType, symbol: string, takeProfit?: number, stopLoss?: number, leverage?: number) => {
-        const side = orderType === 'long' ? 'buy' : 'sell';
+    createOrder: async (quantity: number, orderType: OrderType, symbol: string, takeProfit?: number, stopLoss?: number, leverage: number = 1) => {
+        const side = orderType;
         
         const asset = symbol.split('_')[0] || symbol;
         
         const payload: {
             asset: string;
             side: string;
+            status: string;
             qty: number;
-            leverage?: number;
+            leverage: number;
             takeProfit?: number;
             stopLoss?: number;
         } = { 
             asset, 
             side, 
-            qty: quantity
+            status: 'open',
+            qty: quantity,
+            leverage: leverage
         };
         
         if (takeProfit !== undefined) payload.takeProfit = takeProfit;
         if (stopLoss !== undefined) payload.stopLoss = stopLoss;
-        if (leverage !== undefined) payload.leverage = leverage;
         
         const response = await axiosInstance.post('/trade/open', payload);
         return response.data;
