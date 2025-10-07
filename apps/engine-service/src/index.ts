@@ -12,7 +12,7 @@ interface Order {
   id: string;
   userId: string;
   asset: string;
-  side: "buy" | "sell";
+  side: "long" | "short";
   qty: number;
   leverage?: number;
   openingPrice: number;
@@ -89,9 +89,9 @@ async function createSnapshot() {
 
       let currentPnl = 0;
       if (currentBidPrice && currentAskPrice) {
-        const currentPriceForOrder = order.side === "buy" ? currentBidPrice : currentAskPrice;
+        const currentPriceForOrder = order.side === "long" ? currentBidPrice : currentAskPrice;
         currentPnl =
-          order.side === "buy"
+          order.side === "long"
             ? (currentPriceForOrder - order.openingPrice) * order.qty
             : (order.openingPrice - currentPriceForOrder) * order.qty;
       }
@@ -99,7 +99,7 @@ async function createSnapshot() {
       await prisma.order.upsert({
         where: { id: order.id },
         update: {
-          side: order.side == "buy" ? "long" : "short",
+          side: order.side,
           pnl: Math.round(currentPnl * 10000),
           decimals: 4,
           openingPrice: Math.round(order.openingPrice * 10000),
@@ -115,7 +115,7 @@ async function createSnapshot() {
         create: {
           id: order.id,
           userId: order.userId,
-          side: order.side === "buy" ? "long" : "short",
+          side: order.side,
           pnl: Math.round(currentPnl * 10000),
           decimals: 4,
           openingPrice: Math.round(order.openingPrice * 10000),
@@ -146,7 +146,7 @@ async function processOrderLiquidation(
   context: string = "price-update"
 ) {
   const pnl =
-    order.side === "buy"
+    order.side === "long"
       ? (currentPriceForOrder - order.openingPrice) * order.qty
       : (order.openingPrice - currentPriceForOrder) * order.qty;
 
@@ -156,7 +156,7 @@ async function processOrderLiquidation(
 
   // TP
   if (!reason && order.takeProfit != null) {
-    const hit = order.side === "buy"
+    const hit = order.side === "long"
       ? currentPriceForOrder >= order.takeProfit
       : currentPriceForOrder <= order.takeProfit;
     if (hit) reason = "TakeProfit";
@@ -164,7 +164,7 @@ async function processOrderLiquidation(
 
   // SL
   if (!reason && order.stopLoss != null) {
-    const hit = order.side === "buy"
+    const hit = order.side === "long"
       ? currentPriceForOrder <= order.stopLoss
       : currentPriceForOrder >= order.stopLoss;
     if (hit) reason = "StopLoss";
@@ -236,7 +236,7 @@ async function checkLiquidations() {
     const currentAskPrice = askPrices[symbol] ?? askPrices.BTC;
     if (!currentBidPrice || !currentAskPrice) continue;
 
-    const currentPriceForOrder = order.side === "buy" ? currentBidPrice : currentAskPrice;
+    const currentPriceForOrder = order.side === "long" ? currentBidPrice : currentAskPrice;
 
     const result = await processOrderLiquidation(order, currentPriceForOrder, "periodic-check");
     if (result.liquidated) open_orders.splice(i, 1);
@@ -251,7 +251,7 @@ async function loadSnapshot() {
       id: order.id,
       userId: order.userId,
       asset: "BTC",
-      side: order.side === "long" ? "buy" : "sell",
+      side: order.side as "long" | "short",
       qty: order.qty / 100,
       leverage: order.leverage,
       openingPrice: order.openingPrice / 10000,
@@ -320,7 +320,7 @@ async function engine() {
                   const order = open_orders[i];
                   if (!order || order.asset !== symbol) continue;
 
-                  const curr = order.side === "buy" ? bidPrice : askPrice;
+                  const curr = order.side === "long" ? bidPrice : askPrice;
                   const result = await processOrderLiquidation(order, curr, "price-update");
                   if (result.liquidated) open_orders.splice(i, 1);
                 }
@@ -335,13 +335,15 @@ async function engine() {
               id: orderId,
               userId,
               asset,
-              side,
+              side: rawSide,
               qty,
               leverage,
               balanceSnapshot,
               takeProfit,
               stopLoss,
             } = payload ?? {};
+
+            const side = rawSide as "long" | "short";
 
             const q = safeNum(qty, NaN);
             const lev = safeNum(leverage, 1);
@@ -368,7 +370,7 @@ async function engine() {
               break;
             }
 
-            const openingPrice = side === "buy" ? askPrice : bidPrice;
+            const openingPrice = side === "long" ? askPrice : bidPrice;
             const requiredMargin = (openingPrice * q) / (lev || 1);
 
             const usdc = getMemBalance(userId, "USDC", balanceSnapshot);
@@ -430,9 +432,9 @@ async function engine() {
               const currentAskPrice = askPrices[symbol] ?? askPrices.BTC;
 
               if (currentBidPrice && currentAskPrice) {
-                const currentPriceForOrder = order.side === "buy" ? currentBidPrice : currentAskPrice;
+                const currentPriceForOrder = order.side === "long" ? currentBidPrice : currentAskPrice;
                 closingPrice = currentPriceForOrder;
-                finalPnl = order.side === "buy"
+                finalPnl = order.side === "long"
                   ? (currentPriceForOrder - order.openingPrice) * order.qty
                   : (order.openingPrice - currentPriceForOrder) * order.qty;
               } else {
