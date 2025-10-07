@@ -77,6 +77,10 @@ export const depositBalance = async (req: Request, res: Response) => {
         });
     }
 
+
+    const decimalPlaces = decimals ?? (symbol === 'USDC' ? 2 : 8);
+    const baseUnitAmount = Math.round(amount * Math.pow(10, decimalPlaces));
+
     const updated = await prisma.asset.upsert({
         where: {
             user_symbol_unique: {
@@ -86,11 +90,11 @@ export const depositBalance = async (req: Request, res: Response) => {
         create: {
             userId,
             symbol,
-            balance: amount,
-            decimals: decimals ?? 2
+            balance: baseUnitAmount,
+            decimals: decimalPlaces
         },
         update: {
-            balance: { increment: amount },
+            balance: { increment: baseUnitAmount },
         },
         select: {
             symbol: true,
