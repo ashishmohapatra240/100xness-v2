@@ -99,7 +99,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
     const availableBalance = useMemo(() => {
         if (!balanceData?.balances) return 0;
         const usdcBalance = balanceData.balances.find(balance => balance.symbol === "USDC");
-        return usdcBalance ? usdcBalance.balance : 0;
+        return usdcBalance ? usdcBalance.balance / Math.pow(10, usdcBalance.decimals) : 0;
     }, [balanceData]);
 
     const getExecutionPrice = (side: "long" | "short") => {
@@ -195,13 +195,13 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                         onClick={() => setIsMobileTradeOpen(true)}
                         className="bg-black text-white py-3 px-4 rounded-4xl font-medium transition-colors hover:bg-gray-800"
                     >
-                        Buy
+                        Long
                     </button>
                     <button
                         onClick={() => setIsMobileTradeOpen(true)}
                         className="bg-white text-gray-900 border-2 border-gray-900 py-3 px-4 rounded-4xl font-medium transition-colors hover:bg-gray-100"
                     >
-                        Sell
+                        Short
                     </button>
                 </div>
             </div>
@@ -240,7 +240,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                     </div>
                                 </div>
                                 <div className="text-xs text-gray-600 mt-2 text-center">
-                                    Buy orders pay ask price • Sell orders receive bid price
+                                    Long orders pay ask price • Short orders receive bid price
                                 </div>
                             </div>
 
@@ -351,7 +351,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                         disabled={createOrderMutation.isPending || !getExecutionPrice("long") || !volume || parseFloat(volume) <= 0}
                                         className="bg-black text-white py-3 px-4 rounded-4xl font-medium transition-colors hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
                                     >
-                                        {createOrderMutation.isPending ? "..." : "Buy"}
+                                        {createOrderMutation.isPending ? "..." : "Long"}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -361,7 +361,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                         disabled={createOrderMutation.isPending || !getExecutionPrice("short") || !volume || parseFloat(volume) <= 0}
                                         className="bg-white text-gray-900 border-2 border-gray-900 py-3 px-4 rounded-4xl font-medium transition-colors hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed cursor-pointer"
                                     >
-                                        {createOrderMutation.isPending ? "..." : "Sell"}
+                                        {createOrderMutation.isPending ? "..." : "Short"}
                                     </button>
                                 </div>
 
@@ -428,7 +428,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                     </div>
                 </div>
                 <div className="text-xs text-gray-600 mt-2 text-center">
-                    Buy orders pay ask price • Sell orders receive bid price
+                    Long orders pay ask price • Short orders receive bid price
                 </div>
             </div>
 
@@ -537,14 +537,14 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                             disabled={createOrderMutation.isPending || !getExecutionPrice("long") || !volume || parseFloat(volume) <= 0}
                             className="bg-black text-white py-3 px-4 rounded-4xl font-medium transition-colors hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
                         >
-                            {createOrderMutation.isPending ? "..." : "Buy"}
+                            {createOrderMutation.isPending ? "..." : "Long"}
                         </button>
                         <button
                             onClick={() => handleCreateOrder("short")}
                             disabled={createOrderMutation.isPending || !getExecutionPrice("short") || !volume || parseFloat(volume) <= 0}
                             className="bg-white text-gray-900 border-2 border-gray-900 py-3 px-4 rounded-4xl font-medium transition-colors hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed cursor-pointer"
                         >
-                            {createOrderMutation.isPending ? "..." : "Sell"}
+                            {createOrderMutation.isPending ? "..." : "Short"}
                         </button>
                     </div>
 
