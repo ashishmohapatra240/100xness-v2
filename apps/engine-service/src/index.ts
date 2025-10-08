@@ -292,7 +292,7 @@ async function engine() {
         let msg: any;
         try {
           msg = JSON.parse(raw);
-          console.log(`[ENGINE] Received:`, msg);
+          // console.log(`[ENGINE] Received:`, msg);
         } catch {
           console.log(`[ENGINE] Failed to parse:`, raw);
           continue;
@@ -314,7 +314,7 @@ async function engine() {
                 prices[symbol] = currentPrice;
                 bidPrices[symbol] = bidPrice;
                 askPrices[symbol] = askPrice;
-                console.log(`Price updated: ${symbol} = ${currentPrice} (bid ${bidPrice}, ask ${askPrice})`);
+                // console.log(`Price updated: ${symbol} = ${currentPrice} (bid ${bidPrice}, ask ${askPrice})`);
 
                 for (let i = open_orders.length - 1; i >= 0; i--) {
                   const order = open_orders[i];
