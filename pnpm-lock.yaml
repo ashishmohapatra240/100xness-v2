@@ -253,6 +253,10 @@ importers:
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.15.3
 
   packages/types:
     devDependencies:
