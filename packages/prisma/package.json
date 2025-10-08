@@ -2,13 +2,19 @@
   "name": "@repo/prisma",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "prisma": "^6.15.0"
+    "prisma": "^6.15.0",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0"
