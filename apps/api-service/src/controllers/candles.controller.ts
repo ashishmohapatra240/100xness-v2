@@ -10,13 +10,7 @@ export const getCandles = async (req: Request, res: Response) => {
 
     const { ts: timeframe, startTime, endTime, asset } = result.data;
 
-    if (!timeframe || !startTime || !asset) {
-      return res.status(400).json({
-        error: "Missing required parameters: timeframe, startTime, asset",
-      });
-    }
-
-    let symbol = (asset as string).toUpperCase();
+    let symbol = asset.toUpperCase();
     if (symbol === "BTCUSDT" || symbol === "BTCUSDC") {
       symbol = "BTC_USDC";
     } else if (symbol === "ETHUSDT" || symbol === "ETHUSDC") {
