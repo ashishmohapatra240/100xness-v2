@@ -12,7 +12,7 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/prisma/package.json ./packages/prisma/
 COPY apps/engine-service/package.json ./apps/engine-service/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 COPY packages/redis/ ./packages/redis/
 COPY packages/typescript-config/ ./packages/typescript-config/

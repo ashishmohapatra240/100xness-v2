@@ -11,7 +11,7 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/types/package.json ./packages/types/
 COPY apps/price-poller-service/package.json ./apps/price-poller-service/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 COPY packages/redis/ ./packages/redis/
 COPY packages/typescript-config/ ./packages/typescript-config/
