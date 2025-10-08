@@ -26,6 +26,7 @@ COPY packages/prisma/tsconfig.json ./packages/prisma/
 
 WORKDIR /app/packages/prisma
 RUN npx prisma generate
+RUN npx tsc -b
 
 WORKDIR /app/apps/api-service
 RUN npx tsc -b
