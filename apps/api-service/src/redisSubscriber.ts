@@ -7,7 +7,9 @@ export class RedisSubscriber {
   private callbacks: Record<string, () => void>;
 
   constructor() {
-    this.client = new Redis();
+    const host = process.env.REDIS_HOST || "redis";
+    const port = Number(process.env.REDIS_PORT || 6379);
+    this.client = new Redis({ host, port });
     this.callbacks = {};
     this.runLoop();
   }
