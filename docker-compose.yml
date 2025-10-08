@@ -3,29 +3,36 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+
   api-service:
     build:
       context: .
       dockerfile: apps/api-service/Dockerfile
     ports:
       - "3001:3001"
-    environment:
-      - REDIS_URL=redis://redis:6379
+    env_file:
+      - ./apps/api-service/.env
     depends_on:
       - redis
+
   engine-service:
     build:
       context: .
       dockerfile: apps/engine-service/Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./apps/engine-service/.env
     depends_on:
       - redis
+
   price-poller-service:
     build:
       context: .
       dockerfile: apps/price-poller-service/Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./apps/price-poller-service/.env
     depends_on:
       - redis
