@@ -1,6 +1,4 @@
 import Redis from "ioredis";
-
-export const redis = new Redis({
-    host: "redis",
-    port: 6379
-})
+const host = process.env.REDIS_HOST || "redis";
+const port = Number(process.env.REDIS_PORT || 6379);
+export const redis = new Redis({ host, port });
