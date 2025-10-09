@@ -319,7 +319,8 @@ async function engine() {
             const data = payload?.data || payload;
             if (data && data.s) {
               const s = typeof data.s === "string" ? data.s : "";
-              const symbol = s.endsWith("_USDC") ? s.replace("_USDC", "") : s;
+              const rawSymbol = s.endsWith("_USDC") ? s.replace("_USDC", "") : s;
+              const symbol = rawSymbol.toUpperCase();
               const bidPrice = safeNum(data.b, 0);
               const askPrice = safeNum(data.a, 0);
 
@@ -328,7 +329,7 @@ async function engine() {
                 prices[symbol] = currentPrice;
                 bidPrices[symbol] = bidPrice;
                 askPrices[symbol] = askPrice;
-                // console.log(`Price updated: ${symbol} = ${currentPrice} (bid ${bidPrice}, ask ${askPrice})`);
+                console.log(`[ENGINE] Price updated: ${symbol} = ${currentPrice.toFixed(2)} (bid ${bidPrice.toFixed(2)}, ask ${askPrice.toFixed(2)})`);
 
                 for (let i = open_orders.length - 1; i >= 0; i--) {
                   const order = open_orders[i];
@@ -348,7 +349,7 @@ async function engine() {
             const {
               id: orderId,
               userId,
-              asset,
+              asset: rawAsset,
               side: rawSide,
               qty,
               leverage,
@@ -357,6 +358,7 @@ async function engine() {
               stopLoss,
             } = payload ?? {};
 
+            const asset = rawAsset ? rawAsset.toUpperCase() : "";
             const side = rawSide as "long" | "short";
 
             const q = safeNum(qty, NaN);
