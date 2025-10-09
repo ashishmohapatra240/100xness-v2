@@ -147,6 +147,11 @@ async function processOrderLiquidation(
   currentPriceForOrder: number,
   context: string = "price-update"
 ) {
+  if (!currentPriceForOrder || !Number.isFinite(currentPriceForOrder) || currentPriceForOrder <= 0) {
+    console.log(`${context}: Invalid price for order ${order.id}, skipping liquidation check`);
+    return { liquidated: false, pnl: 0 };
+  }
+
   const pnl =
     order.side === "long"
       ? (currentPriceForOrder - order.openingPrice) * order.qty
@@ -157,19 +162,25 @@ async function processOrderLiquidation(
   let reason: "TakeProfit" | "StopLoss" | "margin" | undefined;
 
   // TP
-  if (!reason && order.takeProfit != null) {
+  if (!reason && order.takeProfit && order.takeProfit > 0) {
     const hit = order.side === "long"
       ? currentPriceForOrder >= order.takeProfit
       : currentPriceForOrder <= order.takeProfit;
-    if (hit) reason = "TakeProfit";
+    if (hit) {
+      reason = "TakeProfit";
+      console.log(`${context}: Take profit hit for order ${order.id} (${order.side}): price ${currentPriceForOrder} vs TP ${order.takeProfit}`);
+    }
   }
 
   // SL
-  if (!reason && order.stopLoss != null) {
+  if (!reason && order.stopLoss && order.stopLoss > 0) {
     const hit = order.side === "long"
       ? currentPriceForOrder <= order.stopLoss
       : currentPriceForOrder >= order.stopLoss;
-    if (hit) reason = "StopLoss";
+    if (hit) {
+      reason = "StopLoss";
+      console.log(`${context}: Stop loss hit for order ${order.id} (${order.side}): price ${currentPriceForOrder} vs SL ${order.stopLoss}`);
+    }
   }
 
   if (!reason && order.leverage) {
@@ -260,8 +271,8 @@ async function loadSnapshot() {
       openingPrice: order.openingPrice / 10000,
       createdAt: order.createdAt.getTime(),
       status: "open",
-      takeProfit: order.takeProfit ? order.takeProfit / 10000 : undefined,
-      stopLoss: order.stopLoss ? order.stopLoss / 10000 : undefined,
+      takeProfit: (order.takeProfit && order.takeProfit > 0) ? order.takeProfit / 10000 : undefined,
+      stopLoss: (order.stopLoss && order.stopLoss > 0) ? order.stopLoss / 10000 : undefined,
     }));
 
     console.log(`loaded ${open_orders.length} open orders from the database`);
@@ -391,12 +402,20 @@ async function engine() {
                 openingPrice,
                 createdAt: Date.now(),
                 status: "open",
-                takeProfit: safeNum(takeProfit, undefined as any),
-                stopLoss: safeNum(stopLoss, undefined as any),
+                takeProfit: (takeProfit != null && Number.isFinite(Number(takeProfit)) && Number(takeProfit) > 0) ? Number(takeProfit) : undefined,
+                stopLoss: (stopLoss != null && Number.isFinite(Number(stopLoss)) && Number(stopLoss) > 0) ? Number(stopLoss) : undefined,
               };
 
               open_orders.push(order);
-              console.log(`Order created: ${orderId} for user ${userId}`, order);
+              console.log(`Order created: ${orderId} for user ${userId}`, {
+                side: order.side,
+                qty: order.qty,
+                openingPrice: order.openingPrice,
+                leverage: order.leverage,
+                takeProfit: order.takeProfit ? order.takeProfit : "not set",
+                stopLoss: order.stopLoss ? order.stopLoss : "not set",
+                createdAt: new Date(order.createdAt).toISOString()
+              });
 
               await client.xadd(CALLBACK_QUEUE, "*", "id", orderId, "status", "created")
                 .catch(err => console.error("Failed to send created callback:", err));
