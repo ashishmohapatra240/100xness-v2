@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useGetOrders, useCloseOrder } from "../hooks/useOrders";
 import { useWs } from "../hooks/useWs";
+import toast from "react-hot-toast";
 
 interface Order {
   id: string;
@@ -34,6 +35,42 @@ const OrdersSection: React.FC = () => {
   const closeOrderMutation = useCloseOrder();
   const { messages, orderBook } = useWs();
   const [activeTab, setActiveTab] = useState<"open" | "all">("open");
+  const prevOrdersRef = useRef<Order[]>([]);
+
+  useEffect(() => {
+    if (!ordersData?.orders || isLoading) return;
+
+    const currentOrders = ordersData.orders;
+    const prevOrders = prevOrdersRef.current;
+
+    currentOrders.forEach((currentOrder: Order) => {
+      const prevOrder = prevOrders.find((o) => o.id === currentOrder.id);
+      
+      if (prevOrder && prevOrder.status === "open" && currentOrder.status === "closed") {
+        const pnl = currentOrder.pnl || 0;
+        const pnlText = pnl >= 0 ? `+$${pnl.toFixed(2)}` : `-$${Math.abs(pnl).toFixed(2)}`;
+        
+        if (currentOrder.closeReason === "Liquidation" || currentOrder.closeReason === "margin") {
+          toast.error(
+            `Order Liquidated: ${currentOrder.symbol.toUpperCase()} ${currentOrder.orderType.toUpperCase()} | PnL: ${pnlText}`,
+            { duration: 6000 }
+          );
+        } else if (currentOrder.closeReason === "TakeProfit") {
+          toast.success(
+            `Take Profit Hit: ${currentOrder.symbol.toUpperCase()} ${currentOrder.orderType.toUpperCase()} | PnL: ${pnlText}`,
+            { duration: 5000 }
+          );
+        } else if (currentOrder.closeReason === "StopLoss") {
+          toast.error(
+            `Stop Loss Hit: ${currentOrder.symbol.toUpperCase()} ${currentOrder.orderType.toUpperCase()} | PnL: ${pnlText}`,
+            { duration: 5000 }
+          );
+        }
+      }
+    });
+
+    prevOrdersRef.current = currentOrders;
+  }, [ordersData, isLoading]);
 
   const currentPrices = useMemo(() => {
     const priceMap = new Map<
