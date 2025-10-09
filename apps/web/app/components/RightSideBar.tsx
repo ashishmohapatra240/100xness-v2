@@ -312,7 +312,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                                     setTakeProfit(value);
                                                 }
                                             }}
-                                            placeholder={getExecutionPrice(orderType) ? `Min ${orderType === "long" ? "4,040.374" : "4,040.374"}` : "Not set"}
+                                            placeholder="Not set"
                                             className={`w-full px-3 py-2 pr-8 border rounded-4xl font-mono ${
                                                 takeProfit && !validateTakeProfit(takeProfit) 
                                                     ? 'border-red-500 bg-red-50' 
@@ -539,7 +539,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                         setTakeProfit(value);
                                     }
                                 }}
-                                placeholder={getExecutionPrice(orderType) ? `Min ${orderType === "long" ? "4,040.374" : "4,040.374"}` : "Not set"}
+                                placeholder="Not set"
                                 className={`w-full px-3 py-2 pr-8 border rounded-lg font-mono ${
                                     takeProfit && !validateTakeProfit(takeProfit) 
                                         ? 'border-red-500 bg-red-50' 
