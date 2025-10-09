@@ -17,6 +17,7 @@ export const useCreateOrder = () => {
             leverage?: number
         }) => orderService.createOrder(quantity, orderType, symbol, takeProfit, stopLoss, leverage),
         onSuccess: async (data) => {
+            await queryClient.invalidateQueries({ queryKey: ['orders'] });
             await queryClient.refetchQueries({ queryKey: ['orders'] });
             toast.success('Order created successfully');
         },
@@ -31,6 +32,8 @@ export const useGetOrders = () => {
     return useQuery({
         queryKey: ['orders'],
         queryFn: () => orderService.getOrders(),
+        refetchInterval: 5000,
+        refetchIntervalInBackground: true,
     })
 }
 
