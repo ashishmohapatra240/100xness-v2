@@ -31,8 +31,6 @@ export const useGetOrders = () => {
     return useQuery({
         queryKey: ['orders'],
         queryFn: () => orderService.getOrders(),
-        refetchInterval: 2000,
-        refetchOnWindowFocus: true,
     })
 }
 
