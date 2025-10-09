@@ -24,9 +24,9 @@ interface Order {
 
 let open_orders: Order[] = [];
 let balances: Record<string, UserBalances> = {};
-let prices: Record<string, number> = { BTC: 2000 };
-let bidPrices: Record<string, number> = { BTC: 1995 };
-let askPrices: Record<string, number> = { BTC: 2005 };
+let prices: Record<string, number> = {};
+let bidPrices: Record<string, number> = {};
+let askPrices: Record<string, number> = {};
 
 let lastId = "$";
 
@@ -84,8 +84,10 @@ async function createSnapshot() {
   try {
     for (const order of open_orders) {
       const symbol = order.asset;
-      const currentBidPrice = bidPrices[symbol] ?? bidPrices.BTC;
-      const currentAskPrice = askPrices[symbol] ?? askPrices.BTC;
+      const currentBidPrice = bidPrices[symbol];
+      const currentAskPrice = askPrices[symbol];
+      
+      if (!currentBidPrice || !currentAskPrice) continue;
 
       let currentPnl = 0;
       if (currentBidPrice && currentAskPrice) {
@@ -232,8 +234,9 @@ async function checkLiquidations() {
     if (!order) continue;
 
     const symbol = order.asset;
-    const currentBidPrice = bidPrices[symbol] ?? bidPrices.BTC;
-    const currentAskPrice = askPrices[symbol] ?? askPrices.BTC;
+    const currentBidPrice = bidPrices[symbol];
+    const currentAskPrice = askPrices[symbol];
+    // Skip if we don't have valid price data for this asset
     if (!currentBidPrice || !currentAskPrice) continue;
 
     const currentPriceForOrder = order.side === "long" ? currentBidPrice : currentAskPrice;
@@ -361,10 +364,10 @@ async function engine() {
               break;
             }
 
-            const bidPrice = bidPrices[asset] ?? bidPrices.BTC;
-            const askPrice = askPrices[asset] ?? askPrices.BTC;
+            const bidPrice = bidPrices[asset];
+            const askPrice = askPrices[asset];
             if (!bidPrice || !askPrice) {
-              console.log("no price available", { orderId, asset });
+              console.log("no price available", { orderId, asset, availablePrices: Object.keys(bidPrices) });
               await client.xadd(CALLBACK_QUEUE, "*", "id", orderId, "status", "no_price")
                 .catch(err => console.error("Failed to send no_price:", err));
               break;
@@ -428,8 +431,8 @@ async function engine() {
             let closingPrice = 0;
 
             if (finalPnl === undefined) {
-              const currentBidPrice = bidPrices[symbol] ?? bidPrices.BTC;
-              const currentAskPrice = askPrices[symbol] ?? askPrices.BTC;
+              const currentBidPrice = bidPrices[symbol];
+              const currentAskPrice = askPrices[symbol];
 
               if (currentBidPrice && currentAskPrice) {
                 const currentPriceForOrder = order.side === "long" ? currentBidPrice : currentAskPrice;
@@ -438,7 +441,9 @@ async function engine() {
                   ? (currentPriceForOrder - order.openingPrice) * order.qty
                   : (order.openingPrice - currentPriceForOrder) * order.qty;
               } else {
+                closingPrice = order.openingPrice;
                 finalPnl = 0;
+                console.log(`No price available for ${symbol} when closing order ${order.id}, using opening price`);
               }
             }
 
