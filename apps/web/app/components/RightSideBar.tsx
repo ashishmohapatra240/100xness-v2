@@ -300,18 +300,37 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                     <label className="block text-sm font-medium text-gray-900 mb-2">
                                         Take Profit (Optional)
                                     </label>
-                                    <input
-                                        type="number"
-                                        value={takeProfit}
-                                        onChange={(e) => setTakeProfit(e.target.value)}
-                                        placeholder={getExecutionPrice(orderType) ? `${orderType === "long" ? ">" : "<"} ${getExecutionPrice(orderType)?.toFixed(4)}` : "Enter price"}
-                                        className={`w-full px-3 py-2 border rounded-4xl font-mono ${
-                                            takeProfit && !validateTakeProfit(takeProfit) 
-                                                ? 'border-red-500 bg-red-50' 
-                                                : 'border-gray-300'
-                                        }`}
-                                        step="0.0001"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={takeProfit}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Allow empty string, numbers, and decimal point
+                                                if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                                    setTakeProfit(value);
+                                                }
+                                            }}
+                                            placeholder={getExecutionPrice(orderType) ? `Min ${orderType === "long" ? "4,040.374" : "4,040.374"}` : "Not set"}
+                                            className={`w-full px-3 py-2 pr-8 border rounded-4xl font-mono ${
+                                                takeProfit && !validateTakeProfit(takeProfit) 
+                                                    ? 'border-red-500 bg-red-50' 
+                                                    : 'border-gray-300'
+                                            }`}
+                                        />
+                                        {takeProfit && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setTakeProfit("")}
+                                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
                                     {takeProfit && !validateTakeProfit(takeProfit) && (
                                         <div className="text-xs text-red-600 mt-1">
                                             Take profit must be {orderType === "long" ? "greater than" : "less than"} {orderType === "long" ? "ask" : "bid"} price (${getExecutionPrice(orderType)?.toFixed(4)})
@@ -323,18 +342,37 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                                     <label className="block text-sm font-medium text-gray-900 mb-2">
                                         Stop Loss (Optional)
                                     </label>
-                                    <input
-                                        type="number"
-                                        value={stopLoss}
-                                        onChange={(e) => setStopLoss(e.target.value)}
-                                        placeholder={getExecutionPrice(orderType) ? `${orderType === "long" ? "<" : ">"} ${getExecutionPrice(orderType)?.toFixed(4)}` : "Enter price"}
-                                        className={`w-full px-3 py-2 border rounded-4xl font-mono ${
-                                            stopLoss && !validateStopLoss(stopLoss) 
-                                                ? 'border-red-500 bg-red-50' 
-                                                : 'border-gray-300'
-                                        }`}
-                                        step="0.0001"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={stopLoss}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                // Allow empty string, numbers, and decimal point
+                                                if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                                    setStopLoss(value);
+                                                }
+                                            }}
+                                            placeholder="Not set"
+                                            className={`w-full px-3 py-2 pr-8 border rounded-4xl font-mono ${
+                                                stopLoss && !validateStopLoss(stopLoss) 
+                                                    ? 'border-red-500 bg-red-50' 
+                                                    : 'border-gray-300'
+                                            }`}
+                                        />
+                                        {stopLoss && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setStopLoss("")}
+                                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
                                     {stopLoss && !validateStopLoss(stopLoss) && (
                                         <div className="text-xs text-red-600 mt-1">
                                             Stop loss must be {orderType === "long" ? "less than" : "greater than"} {orderType === "long" ? "ask" : "bid"} price (${getExecutionPrice(orderType)?.toFixed(4)})
@@ -489,18 +527,37 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                         <label className="block text-sm font-medium text-gray-900 mb-2">
                             Take Profit (Optional)
                         </label>
-                        <input
-                            type="number"
-                            value={takeProfit}
-                            onChange={(e) => setTakeProfit(e.target.value)}
-                            placeholder={getExecutionPrice(orderType) ? `${orderType === "long" ? ">" : "<"} ${getExecutionPrice(orderType)?.toFixed(4)}` : "Enter price"}
-                            className={`w-full px-3 py-2 border rounded-lg font-mono ${
-                                takeProfit && !validateTakeProfit(takeProfit) 
-                                    ? 'border-red-500 bg-red-50' 
-                                    : 'border-gray-300'
-                            }`}
-                            step="0.0001"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={takeProfit}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Allow empty string, numbers, and decimal point
+                                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                        setTakeProfit(value);
+                                    }
+                                }}
+                                placeholder={getExecutionPrice(orderType) ? `Min ${orderType === "long" ? "4,040.374" : "4,040.374"}` : "Not set"}
+                                className={`w-full px-3 py-2 pr-8 border rounded-lg font-mono ${
+                                    takeProfit && !validateTakeProfit(takeProfit) 
+                                        ? 'border-red-500 bg-red-50' 
+                                        : 'border-gray-300'
+                                }`}
+                            />
+                            {takeProfit && (
+                                <button
+                                    type="button"
+                                    onClick={() => setTakeProfit("")}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
                         {takeProfit && !validateTakeProfit(takeProfit) && (
                             <div className="text-xs text-red-600 mt-1">
                                 Take profit must be {orderType === "long" ? "greater than" : "less than"} {orderType === "long" ? "ask" : "bid"} price (${getExecutionPrice(orderType)?.toFixed(4)})
@@ -512,18 +569,37 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ selectedSymbol }) => {
                         <label className="block text-sm font-medium text-gray-900 mb-2">
                             Stop Loss (Optional)
                         </label>
-                        <input
-                            type="number"
-                            value={stopLoss}
-                            onChange={(e) => setStopLoss(e.target.value)}
-                            placeholder={getExecutionPrice(orderType) ? `${orderType === "long" ? "<" : ">"} ${getExecutionPrice(orderType)?.toFixed(4)}` : "Enter price"}
-                            className={`w-full px-3 py-2 border rounded-lg font-mono ${
-                                stopLoss && !validateStopLoss(stopLoss) 
-                                    ? 'border-red-500 bg-red-50' 
-                                    : 'border-gray-300'
-                            }`}
-                            step="0.0001"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={stopLoss}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Allow empty string, numbers, and decimal point
+                                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                        setStopLoss(value);
+                                    }
+                                }}
+                                placeholder="Not set"
+                                className={`w-full px-3 py-2 pr-8 border rounded-lg font-mono ${
+                                    stopLoss && !validateStopLoss(stopLoss) 
+                                        ? 'border-red-500 bg-red-50' 
+                                        : 'border-gray-300'
+                                }`}
+                            />
+                            {stopLoss && (
+                                <button
+                                    type="button"
+                                    onClick={() => setStopLoss("")}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
                         {stopLoss && !validateStopLoss(stopLoss) && (
                             <div className="text-xs text-red-600 mt-1">
                                 Stop loss must be {orderType === "long" ? "less than" : "greater than"} {orderType === "long" ? "ask" : "bid"} price (${getExecutionPrice(orderType)?.toFixed(4)})
