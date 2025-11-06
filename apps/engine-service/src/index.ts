@@ -65,11 +65,19 @@ async function updateBalanceInDatabase(userId: string, symbol: string, newBalanc
 
 function getMemBalance(userId: string, symbol: string, snapshot?: Array<{symbol:string; balance:number; decimals:number}>) {
   if (!balances[userId]) balances[userId] = {};
+  
+  if (snapshot) {
+    const snap = snapshot.find(a => a.symbol === symbol);
+    if (snap) {
+      const decimals = snap.decimals ?? 2;
+      const val = snap.balance / 10 ** decimals;
+      balances[userId][symbol] = val;
+      return val;
+    }
+  }
+  
   if (balances[userId][symbol] == null) {
-    const snap = snapshot?.find(a => a.symbol === symbol);
-    const decimals = snap?.decimals ?? 2;
-    const val = snap ? snap.balance / 10 ** decimals : 0;
-    balances[userId][symbol] = val;
+    balances[userId][symbol] = 0;
   }
   return balances[userId][symbol]!;
 }
@@ -261,7 +269,7 @@ async function loadSnapshot() {
   try {
     const dbOrders = await prisma.order.findMany({ where: { status: "open" } });
 
-    open_orders = dbOrders.map((order) => ({
+    open_orders = dbOrders.map((order: any) => ({
       id: order.id,
       userId: order.userId,
       asset: "BTC",

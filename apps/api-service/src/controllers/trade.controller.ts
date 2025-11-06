@@ -211,7 +211,7 @@ export const getOrders = async (req: Request, res: Response) => {
       },
     });
 
-    const transformedOrders = orders.map((order) => ({
+    const transformedOrders = orders.map((order: any) => ({
       id: order.id,
       symbol: "BTC",
       orderType: order.side === "long" ? "long" : "short",
