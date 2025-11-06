@@ -4,7 +4,7 @@ export const CALLBACK_QUEUE = "callback-queue";
 
 export class RedisSubscriber {
   private client: Redis;
-  private callbacks: Record<string, () => void>;
+  private callbacks: Record<string, (data: Record<string, string>) => void>;
 
   constructor() {
     const host = process.env.REDIS_HOST || "redis";
@@ -41,7 +41,7 @@ export class RedisSubscriber {
 
           const fn = callbackId ? this.callbacks[callbackId] : undefined;
           if (fn) {
-            fn();
+            fn(data);
             delete this.callbacks[callbackId!];
           } else {
             console.log(`[SUBSCRIBER] No waiter for id: ${callbackId}`);
@@ -54,7 +54,7 @@ export class RedisSubscriber {
   }
 
   waitForMessage(callbackId: string) {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<Record<string, string>>((resolve, reject) => {
       console.log(`[SUBSCRIBER] Waiting for callback id: ${callbackId}`);
 
       const timer = setTimeout(() => {
@@ -64,9 +64,9 @@ export class RedisSubscriber {
         }
       }, 5000);
 
-      this.callbacks[callbackId] = () => {
+      this.callbacks[callbackId] = (data: Record<string, string>) => {
         clearTimeout(timer);
-        resolve();
+        resolve(data);
       };
     });
   }

@@ -398,6 +398,16 @@ async function engine() {
             const requiredMargin = (openingPrice * q) / (lev || 1);
 
             const usdc = getMemBalance(userId, "USDC", balanceSnapshot);
+            console.log(`[ENGINE] Balance check for order ${orderId}:`, {
+              userId,
+              usdc,
+              requiredMargin,
+              openingPrice,
+              qty: q,
+              leverage: lev,
+              hasEnoughBalance: usdc >= requiredMargin
+            });
+            
             if (usdc >= requiredMargin) {
               const newBal = setMemBalance(userId, "USDC", usdc - requiredMargin);
               await updateBalanceInDatabase(userId, "USDC", newBal);

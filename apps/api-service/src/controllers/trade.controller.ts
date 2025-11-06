@@ -117,10 +117,43 @@ export const createOrder = async (req: Request, res: Response) => {
     };
 
     console.log(`[CONTROLLER] Sending order ${id} to engine...`);
-    await sendRequestAndWait(id, payload);
+    const [, callback] = await sendRequestAndWait(id, payload);
+    
+    console.log(
+      `[CONTROLLER] Order ${id} callback received:`,
+      callback
+    );
+
+    if (callback.status === "insufficient_balance") {
+      return res.status(400).json({ 
+        error: "Insufficient balance",
+        message: "You don't have enough balance to place this order"
+      });
+    }
+    
+    if (callback.status === "no_price") {
+      return res.status(400).json({ 
+        error: "Price not available",
+        message: "Market price is not available for this asset"
+      });
+    }
+    
+    if (callback.status === "invalid_order") {
+      return res.status(400).json({ 
+        error: "Invalid order",
+        message: "Order parameters are invalid"
+      });
+    }
+    
+    if (callback.status !== "created") {
+      return res.status(400).json({ 
+        error: "Order creation failed",
+        message: `Order was not created. Status: ${callback.status}`
+      });
+    }
 
     console.log(
-      `[CONTROLLER] Order ${id} processed successfully, returning response`
+      `[CONTROLLER] Order ${id} created successfully`
     );
     return res.json({ message: "Order created", orderId: id });
   } catch (e) {
