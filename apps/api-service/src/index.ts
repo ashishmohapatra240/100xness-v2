@@ -19,7 +19,9 @@ app.use(
       "http://localhost:3000",
       "http://localhost:3001",
       "https://100xness.ashishmohapatra.in",
-      "http://100xness.ashishmohapatra.in"
+      "https://www.100xness.ashishmohapatra.in",
+      "http://100xness.ashishmohapatra.in",
+      "http://www.100xness.ashishmohapatra.in"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
