@@ -46,7 +46,7 @@ const Hero = () => {
             href="/marketplace"
             className="border-2 bg-black border-black text-white px-8 py-2 rounded-4xl hover:bg-gray-800 transition-colors font-dm-sans font-medium text-lg w-full sm:w-auto border-2 border-black cursor-pointer text-center"
           >
-            Let&apos;s trade
+            Get Started
           </Link>
           <Link
             href="/docs"
